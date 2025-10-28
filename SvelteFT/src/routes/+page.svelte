@@ -12,6 +12,7 @@
 
 
     import worldJson from 'world-atlas/countries-110m.json';
+  import { scale } from 'svelte/transition';
 
     
 
@@ -40,18 +41,20 @@
         const globalOutline = {type: "Sphere"};
         const graticule = d3.geoGraticule10();
 
+        const initialScale = projection.scale();
+
         const globalPath = svg.append('path')
         .datum(globalOutline)
         .attr('class', 'global-outline')
         .attr('d', path);
 
-        svg.append('path')
+        const graticulePath = svg.append('path')
         .datum(graticule)
         .attr('class', 'graticule')
         .attr('d', path);
 
 
-        svg.append('g')
+        const countriesPath = svg.append('g')
             .selectAll('path')
             .data(countries.features)
             .enter()
@@ -64,7 +67,7 @@
             .on('drag', (event) => {
                 const rotate =projection.rotate()
 
-                const k = 0.5;
+                const k = 0.3;
 
                 const newRotate = [
                     rotate[0] + event.dx * k,
@@ -80,7 +83,31 @@
             });
 
             globalPath.call(dragHandler);
+            countriesPath.call(dragHandler);
+            graticulePath.call(dragHandler);
 
+
+            const zoomHandler = d3.zoom()
+            .scaleExtent([0.8, 10])
+                .on('zoom', (event) => {
+                    const zoom = projection.scale();
+
+                    const newZoom = zoom * event.transform.k;
+                    
+                    
+
+                    
+                    projection.scale(newZoom);
+
+                    svg.selectAll('path').attr('d', path);
+                })
+            
+
+            globalPath.call(zoomHandler);
+            countriesPath.call(zoomHandler);
+            graticulePath.call(zoomHandler);
+
+            
             // Flights
     })
     
@@ -92,9 +119,14 @@
 </main>
 
 <style>
+    *,*::before,*::after {
+        box-sizing: border-box;
+        transition: all 0.5s ease-in-out;
+    }
     main {
         width: 100%;
         text-align: center;
+        position: sticky;
     }
     svg {
         border: 1px solid black;
@@ -116,5 +148,6 @@
         fill: black;
         stroke: white;
         stroke-width: 0.5px;
+        cursor: move;
     }
 </style>
