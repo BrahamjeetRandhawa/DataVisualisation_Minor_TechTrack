@@ -7,7 +7,12 @@
     import { onMount } from 'svelte';
     import * as d3 from 'd3';
     import * as topojson from 'topojson-client';
-    import world from 'world-atlas/countries-110m.json';
+    import type { Topology } from 'topojson-client';
+
+
+    import worldJson from 'world-atlas/countries-110m.json';
+
+    
 
     const width = 960;
     const height = 960;
@@ -27,6 +32,8 @@
 
     onMount(() => {
         const svg = d3.select(svgElement);
+
+        const world = worldJson as Topology;
 
         const countries = topojson.feature(world, world.objects.countries);
 
