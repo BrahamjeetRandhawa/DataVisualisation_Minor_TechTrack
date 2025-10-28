@@ -3,6 +3,7 @@
 
 
 <script lang='ts'>
+    // @ts-nocheck
 
     import { onMount } from 'svelte';
     import * as d3 from 'd3';
@@ -32,10 +33,23 @@
 
     onMount(() => {
         const svg = d3.select(svgElement);
-
         const world = worldJson as Topology;
 
         const countries = topojson.feature(world, world.objects.countries);
+
+        const globalOutline = {type: "Sphere"};
+        const graticule = d3.geoGraticule10();
+
+        const globalPath = svg.append('path')
+        .datum(globalOutline)
+        .attr('class', 'global-outline')
+        .attr('d', path);
+
+        svg.append('path')
+        .datum(graticule)
+        .attr('class', 'graticule')
+        .attr('d', path);
+
 
         svg.append('g')
             .selectAll('path')
@@ -45,6 +59,27 @@
             .attr('class', 'country')
             .attr('d', path)
             
+
+        const dragHandler = d3.drag()
+            .on('drag', (event) => {
+                const rotate =projection.rotate()
+
+                const k = 0.5;
+
+                const newRotate = [
+                    rotate[0] + event.dx * k,
+                    rotate[1] - event.dy * k,
+                    rotate[2]
+                ];
+
+                newRotate[1] = Math.max(-90, Math.min(90, newRotate[1]));
+
+                projection.rotate(newRotate);
+
+                svg.selectAll('path').attr('d', path);
+            });
+
+            globalPath.call(dragHandler);
 
             // Flights
     })
@@ -70,6 +105,7 @@
         fill: red;
         stroke: green;
         stroke-width: 2px;
+        cursor: move;
     }
     :global(.graticule) {
         fill: none;
@@ -77,7 +113,7 @@
         stroke-width: 4px;
     }
     :global(.country) {
-        fill: lightgray;
+        fill: black;
         stroke: white;
         stroke-width: 0.5px;
     }
