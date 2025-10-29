@@ -12,7 +12,32 @@
 
 
     import worldJson from 'world-atlas/countries-110m.json';
-  import { scale } from 'svelte/transition';
+//   import { scale } from 'svelte/transition';
+
+
+
+
+    let data = [];
+
+            async function fetchData() {
+                try {
+                    const response = await fetch('/flights.json')
+                    const jsonData = await response.json();
+                    data = jsonData;
+                    console.log(data)
+                } catch (error) {
+                    console.error('error fetching data', error);
+                }
+            }
+
+
+
+
+
+
+
+
+
 
     
 
@@ -22,17 +47,18 @@
     let svgElement: SVGElement;
 
     const projection = d3.geoAzimuthalEqualArea()
-    .rotate([90, 180])
+    .rotate([0, 0])
     .scale(250)
     .center([0, 0])
-    .translate([width / 2, height / 2]);
+    .translate([width / 2, height / 2])
+    .clipAngle(90);
 
     // const path = d3.geoPath(projection);
 
     const path = d3.geoPath().projection(projection);
 
 
-    onMount(() => {
+    onMount((fetchData) => {
         const svg = d3.select(svgElement);
         const world = worldJson as Topology;
 
@@ -62,9 +88,17 @@
             .attr('class', 'country')
             .attr('d', path)
             
+        // countries.append("title")
+        //     .text(d => d.properties.name);
 
         const dragHandler = d3.drag()
-            .on('drag', (event) => {
+            .on('start', (event) => {
+                event.sourceEvent.stopPropagation(); 
+            })
+                // Hiermee wordt de drag functie niet doorgegeven aan de zoom functie
+
+                .on('drag', (event) => {
+                
                 const rotate =projection.rotate()
 
                 const k = 0.3;
@@ -80,6 +114,7 @@
                 projection.rotate(newRotate);
 
                 svg.selectAll('path').attr('d', path);
+
             });
 
             globalPath.call(dragHandler);
@@ -88,11 +123,11 @@
 
 
             const zoomHandler = d3.zoom()
-            .scaleExtent([0.8, 10])
+            .scaleExtent([0.8, 20])
                 .on('zoom', (event) => {
-                    const zoom = projection.scale();
+                    // const zoom = projection.scale();
 
-                    const newZoom = zoom * event.transform.k;
+                    const newZoom = initialScale * event.transform.k;
                     
                     
 
@@ -102,14 +137,25 @@
                     svg.selectAll('path').attr('d', path);
                 })
             
+                svg.call(zoomHandler);
 
-            globalPath.call(zoomHandler);
-            countriesPath.call(zoomHandler);
-            graticulePath.call(zoomHandler);
+            // globalPath.call(zoomHandler);
+            // countriesPath.call(zoomHandler);
+            // graticulePath.call(zoomHandler);
+
+            // function resetZoom() {
+            // countries.transition().style("fill", null);
+            // svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity, d3.zoomTransform(svg.node()).invert([width / 2, height / 2]));
+
+            // }
+
 
             
             // Flights
+
+            
     })
+    
     
 </script>
 
@@ -127,6 +173,7 @@
         width: 100%;
         text-align: center;
         position: sticky;
+        background-color: rgba(0, 0, 50, 1);
     }
     svg {
         border: 1px solid black;
@@ -134,20 +181,21 @@
         height: auto;
     }
     :global(.global-outline) {
-        fill: red;
+        fill: lightblue;
         stroke: green;
         stroke-width: 2px;
-        cursor: move;
+        cursor: grab;
     }
     :global(.graticule) {
         fill: none;
-        stroke: yellow;
-        stroke-width: 4px;
+        stroke: white;
+        stroke-width: 1px;
+        cursor: grab;
     }
     :global(.country) {
         fill: black;
         stroke: white;
         stroke-width: 0.5px;
-        cursor: move;
+        cursor: grab;
     }
 </style>
