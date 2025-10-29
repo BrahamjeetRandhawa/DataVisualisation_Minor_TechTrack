@@ -43,5 +43,4 @@ export async function GET() {
 //     -d "client_secret=$CLIENT_SECRET" | jq -r .access_token)
 
 
-const response = fetch('https://opensky-network.org/api/states/all');
 

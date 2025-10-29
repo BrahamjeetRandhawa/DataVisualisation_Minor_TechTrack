@@ -14,31 +14,6 @@
     import worldJson from 'world-atlas/countries-110m.json';
 //   import { scale } from 'svelte/transition';
 
-
-
-
-    let data = [];
-
-            async function fetchData() {
-                try {
-                    const response = await fetch('/flights.json')
-                    const jsonData = await response.json();
-                    data = jsonData;
-                    console.log(data)
-                } catch (error) {
-                    console.error('error fetching data', error);
-                }
-            }
-
-
-
-
-
-
-
-
-
-
     
 
     const width = 960;
@@ -58,7 +33,48 @@
     const path = d3.geoPath().projection(projection);
 
 
-    onMount((fetchData) => {
+
+
+
+
+    async function loadFlights() {
+        try {
+            const response = await fetch('/API/flights');
+            if (!response.ok) {
+                throw new Error('failed to fetch', error);
+            }
+
+            const flights = await response.json();
+
+            svg.append('g')
+            .selectAll('flight')
+            // .data(validFlights)
+            .enter()
+            .append('circle')
+            .attr('class', 'flights')
+            .attr('r', 20)
+            .attr('cx', 30)
+            .attr('cy', 30);
+
+        } catch (error) {
+            console.error('failed to fetch the data', error)
+            }
+    } 
+
+
+
+
+
+
+
+
+
+    onMount(() => {
+
+
+
+
+        
         const svg = d3.select(svgElement);
         const world = worldJson as Topology;
 
@@ -153,7 +169,7 @@
             
             // Flights
 
-            
+            loadFlights();
     })
     
     
@@ -171,6 +187,7 @@
     }
     main {
         width: 100%;
+        color: white;
         text-align: center;
         position: sticky;
         background-color: rgba(0, 0, 50, 1);
@@ -197,5 +214,9 @@
         stroke: white;
         stroke-width: 0.5px;
         cursor: grab;
+    }
+    :global(.flights) {
+        fill: red;
+
     }
 </style>
