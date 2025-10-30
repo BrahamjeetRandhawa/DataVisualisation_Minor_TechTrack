@@ -115,7 +115,7 @@
 
                 .on('drag', (event) => {
                 
-                const rotate =projection.rotate()
+                const rotate = projection.rotate()
 
                 const k = 0.3;
 
