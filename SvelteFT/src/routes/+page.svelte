@@ -3,11 +3,7 @@
 
 
 
-<body>
-    <h1>hello</h1>
 
-    <svg></svg>
-</body>
 
 
 <script >
@@ -17,8 +13,8 @@
 
     import { onMount } from 'svelte'
     
-    const width = 800;
-    const height = 800;
+    const width = 960;
+    const height = 960;
     
 
 
@@ -30,6 +26,8 @@
     .rotate([0, 0])
     .clipAngle(90)
     .center([0, 0])
+    .scale(350)
+    .translate([width / 2, height / 2]);
 
     const path = d3.geoPath(projection);
     
