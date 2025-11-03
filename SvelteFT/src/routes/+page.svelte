@@ -11,15 +11,21 @@
 
 
 <script >
-    // @ts-nocheck
     import * as d3 from 'd3';
     import * as topojson from 'topojson-client';
     import worldJson from 'world-atlas/countries-110m.json'
+
+    import { onMount } from 'svelte'
     
+    const width = 800;
+    const height = 800;
     
 
 
 
+    onMount(() => {
+
+    
     const projection = d3.geoOrthographic()
     .rotate([0, 0])
     .clipAngle(90)
@@ -32,12 +38,16 @@
 
     const features = topojson.feature(worldJson, worldJson.objects.countries).features;
 
-    const svg = d3.select("svg");
+    const svg = d3.select("svg")
+    .attr("width", width)
+    .attr("height", height);
 
     svg.selectAll()
     .data(features)
     .join("path")
     .attr("d", path);
+
+    })
 
 </script>
 
