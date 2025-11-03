@@ -2,6 +2,52 @@
 <p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p> -->
 
 
+
+<body>
+    <h1>hello</h1>
+
+    <svg></svg>
+</body>
+
+
+<script >
+    // @ts-nocheck
+    import * as d3 from 'd3';
+    import * as topojson from 'topojson-client';
+    import worldJson from 'world-atlas/countries-110m.json'
+    
+    
+
+
+
+    const projection = d3.geoOrthographic()
+    .rotate([0, 0])
+    .clipAngle(90)
+    .center([0, 0])
+
+    const path = d3.geoPath(projection);
+    
+
+
+
+    const features = topojson.feature(worldJson, worldJson.objects.countries).features;
+
+    const svg = d3.select("svg");
+
+    svg.selectAll()
+    .data(features)
+    .join("path")
+    .attr("d", path);
+
+</script>
+
+
+
+<style></style>
+
+
+
+<!-- 
 <script lang='ts'>
     // @ts-nocheck
 
@@ -219,4 +265,4 @@
         fill: red;
 
     }
-</style>
+</style> -->
