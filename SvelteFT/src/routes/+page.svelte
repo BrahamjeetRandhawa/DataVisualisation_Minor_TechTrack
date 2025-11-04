@@ -36,7 +36,7 @@
 
     const features = topojson.feature(worldJson, worldJson.objects.countries).features;
 
-    const svg = d3.select("svg")
+    const svg = d3.select("#globe")
     .attr("width", width)
     .attr("height", height);
 
@@ -45,6 +45,7 @@
     .join("path")
     .attr("d", path);
 
+    
     })
 
 </script>
