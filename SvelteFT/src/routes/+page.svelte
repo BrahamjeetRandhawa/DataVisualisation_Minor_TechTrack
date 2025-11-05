@@ -24,7 +24,7 @@
         .rotate([0, 0])
         .center([0, 0])
         .clipAngle(90)
-        .scale(height / 2 - 10)
+        .scale(height / 2)
         .translate([width / 2, height / 2])
 
 
@@ -43,9 +43,9 @@
         svg.append("path")
         .datum({type: "Sphere"})
         .attr("d", path)
-        .attr("fill", "black")
-        .attr("stroke", "blue")
-        .attr("stroke-width", 15)
+        .attr("fill", "blue")
+        .attr("stroke", "black")
+        .attr("stroke-width", 1)
 
         // d3.select("#globe")
         // .attr("width", width)
@@ -58,9 +58,9 @@
             .join("path")
             .attr("class", "country")
             .attr("d", path)
-            .attr("d", d3.geoPath())
-            .attr("fill", "green")
-            .attr("stroke", "red")
+            // .attr("d", d3.geoPath())
+            .attr("fill", "grey")
+            .attr("stroke", "black")
     })
 
     </script>
@@ -69,7 +69,7 @@
     <style>
         :global(#globe) {
             display: block;
-            margin: 20px;
+            margin: 0 auto;
         }
     </style>
     
