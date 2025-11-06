@@ -13,8 +13,8 @@
 
     import { onMount } from 'svelte'
     
-    const width = 960;
-    const height = 960;
+    const width = 1200;
+    const height = 1200;
 
 
 
@@ -39,6 +39,7 @@
 
         // const features = worldJson
 
+        
         const countries = topojson.feature(worldJson, worldJson.objects.countries);
 
 
