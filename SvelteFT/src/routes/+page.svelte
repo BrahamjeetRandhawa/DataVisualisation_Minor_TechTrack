@@ -37,7 +37,7 @@
         svg.attr("width", width)
         .attr("height", height)
 
-        const features = worldJson
+        // const features = worldJson
 
         const countries = topojson.feature(worldJson, worldJson.objects.countries);
 
@@ -80,7 +80,8 @@
 
         projection.rotate([
             currentRotate[0] + event.dx * k,
-            currentRotate[1] - event.dy * k
+            currentRotate[1] - event.dy * k,
+            currentRotate[2]
         ]);
 
         path = d3.geoPath(projection)
@@ -90,18 +91,34 @@
 
         })
 
-        const zoom = d3.zoom()
-        .on("start",  (/** @type {any} */ event) => {
-            event.subject.zoom = projection.scale()
-        })
-        .on("zoom", (/** @type {any} */event) => {
-            const currentZoom = projection.zoom()
+        
 
-            projection.zoom([
-                currentZoom[0] + event.zoom,
-                currentZoom[1] - event.zoom
-            ])
-        })
+        // const zoom = d3.zoom()
+        // .on("start",  (/** @type {any} */ event) => {
+        //     event.subject.zoom = projection.scale()
+        // })
+        // .on("zoom", (/** @type {any} */event) => {
+        //     const currentZoom = projection.zoom()
+
+        //     projection.zoom([
+        //         currentZoom[0] + event.zoom,
+        //         currentZoom[1] - event.zoom
+        //     ])
+        // })
+
+
+        const zoom = d3.zoom()
+        .scaleExtent([0.5, 20])
+        .on("zoom", (/** @type {any} */event) => {
+            const newScale = currentZoom * event.transform.k;
+
+            projection.scale(newScale);
+
+            path = d3.geoPath(projection)
+            svg.selectAll("path")
+            .attr("d", path);
+        });
+        
 
         svg
         .call(drag)
@@ -119,6 +136,7 @@
         :global(#globe) {
             display: block;
             margin: 0 auto;
+            cursor: move;
         }
     </style>
     
