@@ -17,10 +17,25 @@
     const height = 1200;
 
 
+    let allFlights = [];
+    let svgContainer;
 
-    onMount(() => {
+    let projection;
+    let path;
+    let svg;
+
+
+
+    onMount( async() => {
         
-        const projection = d3.geoOrthographic()
+    
+
+
+
+
+
+        // const
+        projection = d3.geoOrthographic()
         .rotate([0, 0])
         .center([0, 0])
         .clipAngle(90)
@@ -30,9 +45,10 @@
         const currentZoom = projection.scale()
 
 
-        let path = d3.geoPath(projection);
+        path = d3.geoPath(projection);
 
-        const svg = d3.select("#globe");
+        // const 
+        svg = d3.select(svgContainer);
 
         svg.attr("width", width)
         .attr("height", height)
@@ -90,6 +106,11 @@
         svg.selectAll("path")
         .attr("d", path)
 
+        svg.selectAll("circle.flight")
+        .attr("cx", (/** @type {any} */ d) => projection(d) ? projection(d)[0] : null)
+        .attr("cy", (/** @type {any} */ d) => projection(d) ? projection(d)[1] : null)
+        .style("display", (/** @type {any} */ d) => projection(d) ? "block" : "none")
+
         })
 
         
@@ -118,22 +139,101 @@
             path = d3.geoPath(projection)
             svg.selectAll("path")
             .attr("d", path);
+
+
+
+            svg.selectAll("circle.flight")
+            .attr("cx", (/** @type {any} */ d) => projection(d) ? projection(d)[0] : null)
+            .attr("cy", (/** @type {any} */ d) => projection(d) ? projection(d)[1] : null)
+            .style("display", (/** @type {any} */ d) => projection(d) ? "block" : "none")
         });
         
 
         svg
         .call(drag)
         .call(zoom);
+
+
+
+
+
+
+
+        try {
+            const response = await fetch('/API/flights');
+
+            if (!response.ok) {
+                throw new Error('Data ophaal error');
+            }
+            if (response.ok) {
+                console.log('Data Succes')
+            }
+            const flightsData = await response.json();
+
+            allFlights = flightsData;
+
+        } catch (error) {
+            console.error('Fout gegevens ophalen:', error);
+        }
     
         
     })
 
+    function drawFlightsOnGlobe(flights) {
+        const coordinates = flights
+        .filter(flight => flight[5] != null && flight[6] != null)
+        .map(flight => [flight[5], flight[6]]);
+
+
+        svg.selectAll("circle.flight")
+        .data(coordinates)
+        .join(enter => enter.append("circle")
+            .attr("class", "flight")
+            .attr("r", 2)
+            .attr("fill", "red"),
+            update => update,
+            exit => exit.remove()
+        )
+        .attr("cx", (/** @type {any} */ d) => projection(d) ? projection(d)[0] : null)
+        .attr("cy", (/** @type {any} */ d) => projection(d) ? projection(d)[1] : null)
+        .style("display", (/** @type {any} */ d) => projection(d) ? "block" : "none");
+    }
+
+    $: if (allFlights.length > 0 && svgContainer && projection) {
+        drawFlightsOnGlobe(allFlights);
+        console.log("Flights has data");
+    }
+
 
 
     </script>
+
+
+
+    <h1>Flight Tracker</h1>
+
+	<svg id="globe" bind:this={svgContainer}></svg>
+
+
+
+
+
+
     
 
     <style>
+        *,*::before,*::after {
+            box-sizing: border-box;
+            transition: all 0.5s ease-in-out;
+        }
+
+        /* body {
+            background-color: darkblue;
+        } */
+
+        h1 {
+            color: white;
+        }
         :global(#globe) {
             display: block;
             margin: 0 auto;
