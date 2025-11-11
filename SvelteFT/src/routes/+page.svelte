@@ -171,6 +171,7 @@
             const flightsData = await response.json();
 
             allFlights = flightsData;
+            
 
         } catch (error) {
             console.error('Fout gegevens ophalen:', error);
