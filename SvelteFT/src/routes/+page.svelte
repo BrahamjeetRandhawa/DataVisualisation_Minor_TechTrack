@@ -50,7 +50,8 @@
         // const 
         svg = d3.select(svgContainer);
 
-        svg.attr("width", width)
+        svg
+        .attr("width", width)
         .attr("height", height)
 
         // const features = worldJson
@@ -85,10 +86,10 @@
 
 
         const drag = d3.drag()
-        .on("start", (/** @type {any} */event) => {
+        .on("start", (event) => {
             event.subject.rotate = projection.rotate()
         })
-        .on("drag", (/** @type {any} */event) => {
+        .on("drag", (event) => {
             const sensitivity = 0.25
             const currentRotate = projection.rotate()
             // const rotate = event.subject.rotate
@@ -107,9 +108,9 @@
         .attr("d", path)
 
         svg.selectAll("circle.flight")
-        .attr("cx", (/** @type {any} */ d) => projection(d) ? projection(d)[0] : null)
-        .attr("cy", (/** @type {any} */ d) => projection(d) ? projection(d)[1] : null)
-        .style("display", (/** @type {any} */ d) => projection(d) ? "block" : "none")
+        .attr("cx", (d) => projection(d) ? projection(d)[0] : null)
+        .attr("cy", (d) => projection(d) ? projection(d)[1] : null)
+        .style("display", (d) => projection(d) ? "block" : "none")
 
         })
 
@@ -131,7 +132,7 @@
 
         const zoom = d3.zoom()
         .scaleExtent([0.5, 20])
-        .on("zoom", (/** @type {any} */event) => {
+        .on("zoom", event => {
             const newScale = currentZoom * event.transform.k;
 
             projection.scale(newScale);
