@@ -73,6 +73,45 @@
 
 
 
+    // const visiblethreshold = Math.PI / 2;
+
+    // function updateFlights() {
+    //     if (!svg || !projection) return;
+
+    //     const center =[-projection.rotate()[0], -projection.rotate()[1]];
+
+    //     svg.selectAll("circle.flight")
+    //     .each(function(d) {
+    //         const isVisible = d3.geoDistance(d, center) <= visiblethreshold;
+
+    //         if (isVisible) {
+
+    //             const [x, y] = projection(d);
+    //             d3.select(this)
+    //             .attr("cx", x)
+    //             .attr("cy", y)
+    //             .style("display", "block");
+    //         } else {
+    //             d3.select(this)
+    //             .style("display", "none")
+    //         }
+    //     })
+    // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         svg.selectAll(".country")
             .data(countries.features)
             .join("path")
