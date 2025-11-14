@@ -11,6 +11,7 @@
     import * as topojson from 'topojson-client';
     import worldJson from 'world-atlas/countries-110m.json'
 
+
     import { onMount } from 'svelte'
     
     const width = 1200;
@@ -80,8 +81,9 @@
         if (!svg || !projection) return;
 
         const center =[-projection.rotate()[0], -projection.rotate()[1]];
+        const iconSize = 30;
 
-        svg.selectAll("circle.flight")
+        svg.selectAll("image.flight")
         .each(function(d) {
             const isVisible = d3.geoDistance(d, center) <= visiblethreshold;
 
@@ -89,8 +91,8 @@
 
                 const [x, y] = projection(d);
                 d3.select(this)
-                .attr("cx", x)
-                .attr("cy", y)
+                .attr("x", x - (iconSize / 2))
+                .attr("y", y - (iconSize / 2))
                 .style("display", "block");
             } else {
                 d3.select(this)
@@ -147,10 +149,10 @@
         svg.selectAll("path.country")
         .attr("d", path)
 
-        svg.selectAll("circle.flight")
-        .attr("cx", (d) => projection(d) ? projection(d)[0] : null)
-        .attr("cy", (d) => projection(d) ? projection(d)[1] : null)
-        .style("display", (d) => projection(d) ? "block" : "none")
+        // svg.selectAll("circle.flight")
+        // .attr("cx", (d) => projection(d) ? projection(d)[0] : null)
+        // .attr("cy", (d) => projection(d) ? projection(d)[1] : null)
+        // .style("display", (d) => projection(d) ? "block" : "none")
 
         updateFlights();
 
@@ -173,7 +175,7 @@
 
 
         const zoom = d3.zoom()
-        .scaleExtent([0.5, 20])
+        .scaleExtent([0.5, 30])
         .on("zoom", event => {
             const newScale = currentZoom * event.transform.k;
 
@@ -185,10 +187,10 @@
 
 
 
-            svg.selectAll("circle.flight")
-            .attr("cx", (d) => projection(d) ? projection(d)[0] : null)
-            .attr("cy", (d) => projection(d) ? projection(d)[1] : null)
-            .style("display", (d) => projection(d) ? "block" : "none")
+            // svg.selectAll("circle.flight")
+            // .attr("cx", (d) => projection(d) ? projection(d)[0] : null)
+            // .attr("cy", (d) => projection(d) ? projection(d)[1] : null)
+            // .style("display", (d) => projection(d) ? "block" : "none")
 
             updateFlights();
         });
@@ -231,17 +233,22 @@
         .map(flight => [flight[5], flight[6]]);
 
 
-        svg.selectAll("circle.flight")
+        const iconSize = 30;
+
+        svg.selectAll("image.flight")
         .data(coordinates)
-        .join(enter => enter.append("circle")
+        .join(enter => enter.append("image")
             .attr("class", "flight")
-            .attr("r", 2)
-            .attr("fill", "red"),
+            .attr("href", "/flight-plane-svgrepo-com.svg")
+            .attr("width", iconSize)
+            .attr("height", iconSize),
+            // .attr("r", 2)
+            // .attr("fill", "red"),
             update => update,
             exit => exit.remove()
         )
-        .attr("cx", (d) => projection(d) ? projection(d)[0] : null)
-        .attr("cy", (d) => projection(d) ? projection(d)[1] : null)
+        .attr("x", (d) => projection(d) ? projection(d)[0] - (iconSize / 2) : null)
+        .attr("y", (d) => projection(d) ? projection(d)[1] - (iconSize / 2) : null)
         .style("display", (d) => projection(d) ? "block" : "none")
 
         updateFlights();
