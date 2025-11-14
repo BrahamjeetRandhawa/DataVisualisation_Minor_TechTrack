@@ -7,6 +7,7 @@ import { json } from '@sveltejs/kit';
 // const json = require("sveltejs/kit");
 
 
+
 const Flight_URL = 'https://opensky-network.org/api/states/all';
 
 export async function GET() {
@@ -27,6 +28,12 @@ export async function GET() {
     console.error('Failed to fetch data', error);
     return json({ error: "Failed to fetch data" }, { status: 500 });
 }
+}
+
+function interval() {
+    setInterval(async () => {
+        await GET();
+    }, 5000);
 }
 
 

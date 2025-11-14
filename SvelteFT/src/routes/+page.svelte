@@ -3,266 +3,360 @@
 
 
 
-<body>
-    <h1>hello</h1>
 
-    <svg></svg>
-</body>
 
 
 <script >
-    // @ts-nocheck
     import * as d3 from 'd3';
     import * as topojson from 'topojson-client';
     import worldJson from 'world-atlas/countries-110m.json'
+
+
+    import { onMount } from 'svelte'
     
-    
+    const width = 1200;
+    const height = 1200;
+
+
+    let allFlights = [];
+    let svgContainer;
+
+    let projection;
+    let path;
+    let svg;
+    let sensitivity = 0.25;
+    let intervalID;
 
 
 
-    const projection = d3.geoOrthographic()
-    .rotate([0, 0])
-    .clipAngle(90)
-    .center([0, 0])
-
-    const path = d3.geoPath(projection);
-    
-
-
-
-    const features = topojson.feature(worldJson, worldJson.objects.countries).features;
-
-    const svg = d3.select("svg");
-
-    svg.selectAll()
-    .data(features)
-    .join("path")
-    .attr("d", path);
-
-</script>
-
-
-
-<style></style>
-
-
-
-<!-- 
-<script lang='ts'>
-    // @ts-nocheck
-
-    import { onMount } from 'svelte';
-    import * as d3 from 'd3';
-    import * as topojson from 'topojson-client';
-    import type { Topology } from 'topojson-client';
-
-
-    import worldJson from 'world-atlas/countries-110m.json';
-//   import { scale } from 'svelte/transition';
-
+    onMount( async() => {
+        
     
 
-    const width = 960;
-    const height = 960;
-
-    let svgElement: SVGElement;
-
-    const projection = d3.geoAzimuthalEqualArea()
-    .rotate([0, 0])
-    .scale(250)
-    .center([0, 0])
-    .translate([width / 2, height / 2])
-    .clipAngle(90);
-
-    // const path = d3.geoPath(projection);
-
-    const path = d3.geoPath().projection(projection);
 
 
 
 
+        // const
+        projection = d3.geoOrthographic()
+        .rotate([0, 0])
+        .center([0, 0])
+        .clipAngle(90)
+        .scale(height / 2)
+        .translate([width / 2, height / 2])
+
+        const currentZoom = projection.scale()
 
 
-    async function loadFlights() {
-        try {
-            const response = await fetch('/API/flights');
-            if (!response.ok) {
-                throw new Error('failed to fetch', error);
-            }
+        path = d3.geoPath(projection);
 
-            const flights = await response.json();
+        // const 
+        svg = d3.select(svgContainer);
 
-            svg.append('g')
-            .selectAll('flight')
-            // .data(validFlights)
-            .enter()
-            .append('circle')
-            .attr('class', 'flights')
-            .attr('r', 20)
-            .attr('cx', 30)
-            .attr('cy', 30);
+        svg
+        .attr("width", width)
+        .attr("height", height)
 
-        } catch (error) {
-            console.error('failed to fetch the data', error)
-            }
-    } 
-
-
-
-
-
-
-
-
-
-    onMount(() => {
-
-
-
+        // const features = worldJson
 
         
-        const svg = d3.select(svgElement);
-        const world = worldJson as Topology;
-
-        const countries = topojson.feature(world, world.objects.countries);
-
-        const globalOutline = {type: "Sphere"};
-        const graticule = d3.geoGraticule10();
-
-        const initialScale = projection.scale();
-
-        const globalPath = svg.append('path')
-        .datum(globalOutline)
-        .attr('class', 'global-outline')
-        .attr('d', path);
-
-        const graticulePath = svg.append('path')
-        .datum(graticule)
-        .attr('class', 'graticule')
-        .attr('d', path);
+        const countries = topojson.feature(worldJson, worldJson.objects.countries);
 
 
-        const countriesPath = svg.append('g')
-            .selectAll('path')
+        svg.append("path")
+        .datum({type: "Sphere"})
+        .attr("class", "sphere")
+        .attr("d", path)
+        .attr("fill", "#2B65EC")
+        .attr("stroke", "black")
+        .attr("stroke-width", 1)
+
+        // d3.select("#globe")
+        // .attr("width", width)
+        // .attr("height", height)
+
+
+
+    const visiblethreshold = Math.PI / 2;
+
+    function updateFlights() {
+        if (!svg || !projection) return;
+
+        const center =[-projection.rotate()[0], -projection.rotate()[1]];
+        const iconSize = 30;
+
+        svg.selectAll("image.flight")
+        .each(function(d) {
+            const isVisible = d3.geoDistance(d, center) <= visiblethreshold;
+
+            if (isVisible) {
+
+                const [x, y] = projection(d);
+                d3.select(this)
+                .attr("x", x - (iconSize / 2))
+                .attr("y", y - (iconSize / 2))
+                .style("display", "block");
+            } else {
+                d3.select(this)
+                .style("display", "none")
+            }
+        })
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        svg.selectAll(".country")
             .data(countries.features)
-            .enter()
-            .append('path')
-            .attr('class', 'country')
-            .attr('d', path)
+            .join("path")
+            .attr("class", "country")
+            .attr("d", path)
+            // .attr("d", d3.geoPath())
+            .attr("fill", "grey")
+            .attr("stroke", "black")
+
+
+
+
+        const drag = d3.drag()
+        .on("start", (event) => {
+            event.subject.rotate = projection.rotate()
+        })
+        .on("drag", (event) => {
+            // const sensitivity = 0.25
+            const currentRotate = projection.rotate()
+            // const rotate = event.subject.rotate
+            const k = sensitivity
+        
+
+        projection.rotate([
+            currentRotate[0] + event.dx * k,
+            currentRotate[1] - event.dy * k,
+            currentRotate[2]
+        ]);
+
+        path = d3.geoPath(projection)
+
+        svg.selectAll("path.country")
+        .attr("d", path)
+
+        // svg.selectAll("circle.flight")
+        // .attr("cx", (d) => projection(d) ? projection(d)[0] : null)
+        // .attr("cy", (d) => projection(d) ? projection(d)[1] : null)
+        // .style("display", (d) => projection(d) ? "block" : "none")
+
+        updateFlights();
+
+        })
+
+        
+
+        // const zoom = d3.zoom()
+        // .on("start",  (/** @type {any} */ event) => {
+        //     event.subject.zoom = projection.scale()
+        // })
+        // .on("zoom", (/** @type {any} */event) => {
+        //     const currentZoom = projection.zoom()
+
+        //     projection.zoom([
+        //         currentZoom[0] + event.zoom,
+        //         currentZoom[1] - event.zoom
+        //     ])
+        // })
+
+
+        const zoom = d3.zoom()
+        .scaleExtent([0.5, 30])
+        .on("zoom", event => {
+            const newScale = currentZoom * event.transform.k;
+
+            projection.scale(newScale);
+
+            path = d3.geoPath(projection)
+            svg.selectAll("path")
+            .attr("d", path);
+
+
+
+
             
-        // countries.append("title")
-        //     .text(d => d.properties.name);
 
-        const dragHandler = d3.drag()
-            .on('start', (event) => {
-                event.sourceEvent.stopPropagation(); 
-            })
-                // Hiermee wordt de drag functie niet doorgegeven aan de zoom functie
+            if (event.transform.k > 20) {
+            sensitivity = 0.01;
+        } else if (event.transform.k > 10) {
+            sensitivity = 0.20;
+        } else if (event.transform.k > 5) {
+            sensitivity = 0.22;
+        } else if (event.transform.k < 5) {
+            sensitivity = 0.25;
+        }
 
-                .on('drag', (event) => {
-                
-                const rotate = projection.rotate()
-
-                const k = 0.3;
-
-                const newRotate = [
-                    rotate[0] + event.dx * k,
-                    rotate[1] - event.dy * k,
-                    rotate[2]
-                ];
-
-                newRotate[1] = Math.max(-90, Math.min(90, newRotate[1]));
-
-                projection.rotate(newRotate);
-
-                svg.selectAll('path').attr('d', path);
-
-            });
-
-            globalPath.call(dragHandler);
-            countriesPath.call(dragHandler);
-            graticulePath.call(dragHandler);
+        
 
 
-            const zoomHandler = d3.zoom()
-            .scaleExtent([0.8, 20])
-                .on('zoom', (event) => {
-                    // const zoom = projection.scale();
 
-                    const newZoom = initialScale * event.transform.k;
-                    
-                    
+            // svg.selectAll("circle.flight")
+            // .attr("cx", (d) => projection(d) ? projection(d)[0] : null)
+            // .attr("cy", (d) => projection(d) ? projection(d)[1] : null)
+            // .style("display", (d) => projection(d) ? "block" : "none")
 
-                    
-                    projection.scale(newZoom);
+            updateFlights();
+        });
+        
 
-                    svg.selectAll('path').attr('d', path);
-                })
+        svg
+        .call(drag)
+        .call(zoom);
+
+        
+
+
+
+
+
+
+
+        // try {
+        //     const response = await fetch('/API/flights');
+
+        //     if (!response.ok) {
+        //         throw new Error('Data ophaal error');
+        //     }
+        //     if (response.ok) {
+        //         console.log('Data Succes')
+        //     }
+        //     const flightsData = await response.json();
+
+        //     allFlights = flightsData;
             
-                svg.call(zoomHandler);
 
-            // globalPath.call(zoomHandler);
-            // countriesPath.call(zoomHandler);
-            // graticulePath.call(zoomHandler);
-
-            // function resetZoom() {
-            // countries.transition().style("fill", null);
-            // svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity, d3.zoomTransform(svg.node()).invert([width / 2, height / 2]));
-
-            // }
+        // } catch (error) {
+        //     console.error('Fout gegevens ophalen:', error);
+        // }
 
 
-            
-            // Flights
+        await fetchData();
 
-            loadFlights();
+        // elke 2 minuten data verversen
+        const pollingInterval = 120000;
+        intervalID = setInterval(fetchData, pollingInterval);
+
+        return () => {
+            clearInterval(intervalID);
+        }
+    
+        
     })
+
+    function drawFlightsOnGlobe(flights) {
+        const coordinates = flights
+        .filter(flight => flight[5] != null && flight[6] != null)
+        .map(flight => [flight[5], flight[6]]);
+
+
+        const iconSize = 30;
+
+        svg.selectAll("image.flight")
+        .data(coordinates)
+        .join(enter => enter.append("image")
+            .attr("class", "flight")
+            .attr("href", "/flight-plane-svgrepo-com.svg")
+            .attr("width", iconSize)
+            .attr("height", iconSize),
+            // .attr("r", 2)
+            // .attr("fill", "red"),
+            update => update,
+            exit => exit.remove()
+        )
+        .attr("x", (d) => projection(d) ? projection(d)[0] - (iconSize / 2) : null)
+        .attr("y", (d) => projection(d) ? projection(d)[1] - (iconSize / 2) : null)
+        .style("display", (d) => projection(d) ? "block" : "none")
+        
+
+        updateFlights();
+    }
+
+    $: if (allFlights.length > 0 && svgContainer && projection) {
+        drawFlightsOnGlobe(allFlights);
+        console.log("Flights has data");
+    }
+
+
+
+
+
+
+
+
+    async function fetchData() {
+     try {
+            const response = await fetch('/API/flights');
+
+            if (!response.ok) {
+                throw new Error('Data ophaal error');
+            }
+            if (response.ok) {
+                console.log('Data Succes')
+            }
+            const flightsData = await response.json();
+
+            allFlights = flightsData;
+            
+
+        } catch (error) {
+            console.error('Fout gegevens ophalen:', error);
+        }
+    }
+
+
+
+    </script>
+
+
+
+    <h1>Flight Tracker</h1>
+
+	<svg id="globe" bind:this={svgContainer}></svg>
+
+
+
+
+
+
     
+
+    <style>
+        *,*::before,*::after {
+            box-sizing: border-box;
+            transition: all 0.5s ease-in-out;
+        }
+
+        /* body {
+            background-color: darkblue;
+        } */
+
+        h1 {
+            color: white;
+        }
+        :global(#globe) {
+            display: block;
+            margin: 0 auto;
+            cursor: move;
+        }
+    </style>
     
-</script>
 
-<main>
-    <h1>Kaart</h1>
-    <svg {width} height={height} bind:this={svgElement} viewBox="0 0 {width} {width}"></svg>
-</main>
 
-<style>
-    *,*::before,*::after {
-        box-sizing: border-box;
-        transition: all 0.5s ease-in-out;
-    }
-    main {
-        width: 100%;
-        color: white;
-        text-align: center;
-        position: sticky;
-        background-color: rgba(0, 0, 50, 1);
-    }
-    svg {
-        border: 1px solid black;
-        max-width: 100%;
-        height: auto;
-    }
-    :global(.global-outline) {
-        fill: lightblue;
-        stroke: green;
-        stroke-width: 2px;
-        cursor: grab;
-    }
-    :global(.graticule) {
-        fill: none;
-        stroke: white;
-        stroke-width: 1px;
-        cursor: grab;
-    }
-    :global(.country) {
-        fill: black;
-        stroke: white;
-        stroke-width: 0.5px;
-        cursor: grab;
-    }
-    :global(.flights) {
-        fill: red;
 
-    }
-</style> -->
+    
