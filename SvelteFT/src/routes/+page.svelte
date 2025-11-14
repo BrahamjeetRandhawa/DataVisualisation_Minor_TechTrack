@@ -62,6 +62,7 @@
 
         svg.append("path")
         .datum({type: "Sphere"})
+        .attr("class", "sphere")
         .attr("d", path)
         .attr("fill", "#2B65EC")
         .attr("stroke", "black")
@@ -73,30 +74,30 @@
 
 
 
-    // const visiblethreshold = Math.PI / 2;
+    const visiblethreshold = Math.PI / 2;
 
-    // function updateFlights() {
-    //     if (!svg || !projection) return;
+    function updateFlights() {
+        if (!svg || !projection) return;
 
-    //     const center =[-projection.rotate()[0], -projection.rotate()[1]];
+        const center =[-projection.rotate()[0], -projection.rotate()[1]];
 
-    //     svg.selectAll("circle.flight")
-    //     .each(function(d) {
-    //         const isVisible = d3.geoDistance(d, center) <= visiblethreshold;
+        svg.selectAll("circle.flight")
+        .each(function(d) {
+            const isVisible = d3.geoDistance(d, center) <= visiblethreshold;
 
-    //         if (isVisible) {
+            if (isVisible) {
 
-    //             const [x, y] = projection(d);
-    //             d3.select(this)
-    //             .attr("cx", x)
-    //             .attr("cy", y)
-    //             .style("display", "block");
-    //         } else {
-    //             d3.select(this)
-    //             .style("display", "none")
-    //         }
-    //     })
-    // }
+                const [x, y] = projection(d);
+                d3.select(this)
+                .attr("cx", x)
+                .attr("cy", y)
+                .style("display", "block");
+            } else {
+                d3.select(this)
+                .style("display", "none")
+            }
+        })
+    }
 
 
 
@@ -143,13 +144,15 @@
 
         path = d3.geoPath(projection)
 
-        svg.selectAll("path")
+        svg.selectAll("path.country")
         .attr("d", path)
 
         svg.selectAll("circle.flight")
         .attr("cx", (d) => projection(d) ? projection(d)[0] : null)
         .attr("cy", (d) => projection(d) ? projection(d)[1] : null)
         .style("display", (d) => projection(d) ? "block" : "none")
+
+        updateFlights();
 
         })
 
@@ -183,9 +186,11 @@
 
 
             svg.selectAll("circle.flight")
-            .attr("cx", (/** @type {any} */ d) => projection(d) ? projection(d)[0] : null)
-            .attr("cy", (/** @type {any} */ d) => projection(d) ? projection(d)[1] : null)
-            .style("display", (/** @type {any} */ d) => projection(d) ? "block" : "none")
+            .attr("cx", (d) => projection(d) ? projection(d)[0] : null)
+            .attr("cy", (d) => projection(d) ? projection(d)[1] : null)
+            .style("display", (d) => projection(d) ? "block" : "none")
+
+            updateFlights();
         });
         
 
@@ -235,9 +240,11 @@
             update => update,
             exit => exit.remove()
         )
-        .attr("cx", (/** @type {any} */ d) => projection(d) ? projection(d)[0] : null)
-        .attr("cy", (/** @type {any} */ d) => projection(d) ? projection(d)[1] : null)
-        .style("display", (/** @type {any} */ d) => projection(d) ? "block" : "none");
+        .attr("cx", (d) => projection(d) ? projection(d)[0] : null)
+        .attr("cy", (d) => projection(d) ? projection(d)[1] : null)
+        .style("display", (d) => projection(d) ? "block" : "none")
+
+        updateFlights();
     }
 
     $: if (allFlights.length > 0 && svgContainer && projection) {
