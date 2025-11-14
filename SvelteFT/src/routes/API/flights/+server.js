@@ -7,6 +7,7 @@ import { json } from '@sveltejs/kit';
 // const json = require("sveltejs/kit");
 
 
+
 const Flight_URL = 'https://opensky-network.org/api/states/all';
 
 export async function GET() {
