@@ -24,6 +24,7 @@
     let projection;
     let path;
     let svg;
+    let sensitivity = 0.25;
 
 
 
@@ -132,7 +133,7 @@
             event.subject.rotate = projection.rotate()
         })
         .on("drag", (event) => {
-            const sensitivity = 0.25
+            // const sensitivity = 0.25
             const currentRotate = projection.rotate()
             // const rotate = event.subject.rotate
             const k = sensitivity
@@ -187,6 +188,23 @@
 
 
 
+
+            
+
+            if (event.transform.k > 20) {
+            sensitivity = 0.01;
+        } else if (event.transform.k > 10) {
+            sensitivity = 0.20;
+        } else if (event.transform.k > 5) {
+            sensitivity = 0.22;
+        } else if (event.transform.k < 5) {
+            sensitivity = 0.25;
+        }
+
+        
+
+
+
             // svg.selectAll("circle.flight")
             // .attr("cx", (d) => projection(d) ? projection(d)[0] : null)
             // .attr("cy", (d) => projection(d) ? projection(d)[1] : null)
@@ -199,6 +217,8 @@
         svg
         .call(drag)
         .call(zoom);
+
+        
 
 
 
