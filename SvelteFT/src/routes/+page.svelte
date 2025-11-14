@@ -25,6 +25,7 @@
     let path;
     let svg;
     let sensitivity = 0.25;
+    let intervalID;
 
 
 
@@ -226,22 +227,32 @@
 
 
 
-        try {
-            const response = await fetch('/API/flights');
+        // try {
+        //     const response = await fetch('/API/flights');
 
-            if (!response.ok) {
-                throw new Error('Data ophaal error');
-            }
-            if (response.ok) {
-                console.log('Data Succes')
-            }
-            const flightsData = await response.json();
+        //     if (!response.ok) {
+        //         throw new Error('Data ophaal error');
+        //     }
+        //     if (response.ok) {
+        //         console.log('Data Succes')
+        //     }
+        //     const flightsData = await response.json();
 
-            allFlights = flightsData;
+        //     allFlights = flightsData;
             
 
-        } catch (error) {
-            console.error('Fout gegevens ophalen:', error);
+        // } catch (error) {
+        //     console.error('Fout gegevens ophalen:', error);
+        // }
+
+
+        await fetchData();
+
+        const pollingInterval = 15000;
+        intervalID = setInterval(fetchData, pollingInterval);
+
+        return () => {
+            clearInterval(intervalID);
         }
     
         
@@ -270,6 +281,7 @@
         .attr("x", (d) => projection(d) ? projection(d)[0] - (iconSize / 2) : null)
         .attr("y", (d) => projection(d) ? projection(d)[1] - (iconSize / 2) : null)
         .style("display", (d) => projection(d) ? "block" : "none")
+        
 
         updateFlights();
     }
@@ -277,6 +289,33 @@
     $: if (allFlights.length > 0 && svgContainer && projection) {
         drawFlightsOnGlobe(allFlights);
         console.log("Flights has data");
+    }
+
+
+
+
+
+
+
+
+    async function fetchData() {
+     try {
+            const response = await fetch('/API/flights');
+
+            if (!response.ok) {
+                throw new Error('Data ophaal error');
+            }
+            if (response.ok) {
+                console.log('Data Succes')
+            }
+            const flightsData = await response.json();
+
+            allFlights = flightsData;
+            
+
+        } catch (error) {
+            console.error('Fout gegevens ophalen:', error);
+        }
     }
 
 
