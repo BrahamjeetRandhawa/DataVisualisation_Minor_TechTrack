@@ -248,8 +248,8 @@
 
         await fetchData();
 
-        // elke 2 minuten data verversen
-        const pollingInterval = 120000;
+        // elke 2 minuten data verversen = 120000 ms
+        const pollingInterval = 1000000;
         intervalID = setInterval(fetchData, pollingInterval);
 
         return () => {
