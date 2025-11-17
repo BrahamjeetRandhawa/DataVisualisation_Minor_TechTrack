@@ -346,9 +346,9 @@
             background-color: darkblue;
         } */
 
-        h1 {
+        /* h1 {
             color: white;
-        }
+        } */
         :global(#globe) {
             display: block;
             margin: 0 auto;
