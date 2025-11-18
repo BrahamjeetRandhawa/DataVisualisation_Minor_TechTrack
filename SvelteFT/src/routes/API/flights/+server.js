@@ -31,11 +31,7 @@ export async function GET() {
 }
 }
 
-function interval() {
-    setInterval(async () => {
-        await GET();
-    }, 5000);
-}
+
 
 
 

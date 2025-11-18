@@ -17,6 +17,14 @@
     // const width = 1200;
     // const height = 1200;
 
+
+    // !Important localStorage setup for flights
+
+    const CACHE_KEY = 'flightDataStorage';
+    const CACHE_TIMESTAMP = 'flightDataTime';
+    const CACHE_DURATION = 5 * 60 * 1000;
+
+
     let width;
     let height;
 
@@ -161,8 +169,23 @@
 
 
 
-    async function fetchData() {
+    async function fetchData(forceRefresh = false) {
      try {
+            const nowData = Date.now();
+
+            if (!forceRefresh) {
+                const storedData = localStorage.getItem(CACHE_KEY);
+                const storedTime = localStorage.getItem(CACHE_TIMESTAMP);
+
+                if (storedData && storedTime (now - storedTime < CACHE_DURATION)) {
+                    console.log('localStorage is being used!');
+                    allFlights = JSON.parse(storedData);
+                    return;
+                }
+            }
+
+
+            console.log('Fresh data fetch from API works');
             const response = await fetch('/API/flights');
 
             if (!response.ok) {
@@ -173,11 +196,23 @@
             }
             const flightsData = await response.json();
 
-            allFlights = flightsData;
+            if (Array.isArray(flightsData)){
+                allFlights = flightsData;
+            }
+            // allFlights = flightsData;
             
-
+            localStorage.setItem(CACHE_KEY, JSON.stringify(flightsData));
+            localStorage.setItem(CACHE_TIMESTAMP, now.toString());
+            console.log('Data secured in localStorage');
+            
         } catch (error) {
             console.error('Fout gegevens ophalen:', error);
+
+            const fallBackData = localStorage.getItem(CACHE_KEY);
+            if (fallBackData) {
+                console.warn('API failed, using backup cache');
+                allFlights = JSON.parse(fallBackData);
+            }
         }
     }
 
@@ -400,11 +435,11 @@
         // }
 
 
-        await fetchData();
+        await fetchData(false);
 
         // elke 2 minuten data verversen = 120000 ms
         const pollingInterval = 1000000;
-        intervalID = setInterval(fetchData, pollingInterval);
+        intervalID = setInterval(() => fetchData(true), pollingInterval);
 
         return () => {
             clearInterval(intervalID);
