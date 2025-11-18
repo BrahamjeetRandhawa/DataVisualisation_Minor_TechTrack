@@ -28,11 +28,14 @@
     let projection;
     let path;
     let svg;
+    let initialScale;
+    let currentZoom;
     let sensitivity = 0.25;
     let intervalID;
+    let hasMoved = false;
     let timer;
 
-    const speedFactor = 0.0005;
+    const speedFactor = 0.0000005;
 
 
     $: if (svg && projection && width && height) {
@@ -57,33 +60,49 @@
 
 
 
-    const visiblethreshold = Math.PI / 2;
+    const visibleThreshold = Math.PI / 2;
 
     function updateFlights() {
-        if (!svg || !projection) return;
+        if (!svg || !projection || flightData.length === 0) return;
 
         const center =[-projection.rotate()[0], -projection.rotate()[1]];
         const iconSize = 30;
 
+
         svg.selectAll("image.flight")
-        .each(function(d) {
-            const isVisible = d3.geoDistance(d.coords, center) <= visiblethreshold;
+        .style("display", d => {
+            const dist = d3.geoDistance(d.coords, center);
+            return dist > visibleThreshold ? "none" : "block";
+        })
+        .attr("transform", d => {
+            const p = projection(d.coords);
+            if (!p) return null;
 
-            if (isVisible) {
-
-                const [x, y] = projection(d. coords);
-                d3.select(this)
-                .attr("x", x - (iconSize / 2))
-                .attr("y", y - (iconSize / 2))
-
-                .attr("transform", `rotate(${d.heading}, ${x}, ${y})`)
-                .style("display", "block");
-            } else {
-                d3.select(this)
-                .style("display", "none")
-            }
+            const x = p[0] - (iconSize / 2);
+            const y = p[1] - (iconSize / 2);
+            return `translate(${x}, ${y}) rotate(${d.heading}, ${(iconSize / 2)}, ${(iconSize / 2)})`;
         })
     }
+
+        // svg.selectAll("image.flight")
+        // .each(function(d) {
+        //     const isVisible = d3.geoDistance(d.coords, center) <= visiblethreshold;
+
+        //     if (isVisible) {
+
+        //         const [x, y] = projection(d. coords);
+        //         d3.select(this)
+        //         .attr("x", x - (iconSize / 2))
+        //         .attr("y", y - (iconSize / 2))
+
+        //         .attr("transform", `rotate(${d.heading}, ${x}, ${y})`)
+        //         .style("display", "block");
+        //     } else {
+        //         d3.select(this)
+        //         .style("display", "none")
+        //     }
+    //     })
+    
 
 
 
@@ -99,7 +118,8 @@
         coords: [flight[5], flight[6]],
         heading: flight[10] || 0,
         velocity: flight[9] || 0,
-        callSign: flight[1] || "N/A"
+        callSign: flight[1] || "N/A",
+        id: flight[0]
 // Here I extract the flight coordinates and heading. The 5 and 6 are the [long, lat] indexes from the json. The 10 is the heading index. With 0 being a fallback, if heading cannot be found.
 
 
@@ -110,7 +130,7 @@
         const iconSize = 30;
 
         svg.selectAll("image.flight")
-        .data(flightData)
+        .data(flightData, d => d.id)
         .join(enter => enter.append("image")
             .attr("class", "flight")
             .attr("href", "/flight-plane-svgrepo-com.svg")
@@ -177,7 +197,7 @@
     onMount( async() => {
         
     
-        const initialScale = Math.min(width, height) / 2.2;
+        initialScale = Math.min(width, height) / 2.2;
 
 
         // const
@@ -185,10 +205,10 @@
         .rotate([0, 0])
         .center([0, 0])
         .clipAngle(90)
-        .scale(height / 2)
+        .scale(initialScale)
         .translate([width / 2, height / 2])
 
-        const currentZoom = projection.scale()
+        // currentZoom = projection.scale() || 1;
 
 
         path = d3.geoPath(projection);
@@ -196,9 +216,9 @@
         // const 
         svg = d3.select(svgContainer);
 
-        svg
-        .attr("width", width)
-        .attr("height", height)
+        // svg
+        // .attr("width", width)
+        // .attr("height", height)
 
         // const features = worldJson
 
@@ -287,7 +307,7 @@
         const zoom = d3.zoom()
         .scaleExtent([0.5, 30])
         .on("zoom", event => {
-            const newScale = currentZoom * event.transform.k;
+            const newScale = initialScale * event.transform.k;
 
             projection.scale(newScale);
 
@@ -331,6 +351,7 @@
 
             if (!flightData || flightData.length === 0) return;
 
+            
             flightData.forEach(d => {
                 if(d.velocity && d.velocity > 0) {
 
@@ -343,9 +364,13 @@
 
                     d.coords[0] += dLon;
                     d.coords[1] += dLat;
+                    hasMoved = true;
 
                 }
-            })
+            });
+
+            if(hasMoved)
+            updateFlights();
         }))
 
         
@@ -424,11 +449,10 @@
             background-color: darkblue;
         }
 
-        :global(image.flight) {
+        /* :global(image.flight) {
             box-sizing: border-box;
             transition: all 0.5s ease-in-out;
-
-        }
+        } */
 
         h1 {
             box-sizing: border-box;
