@@ -22,6 +22,7 @@
 
 
     let allFlights = [];
+    let flightData = [];
     let svgContainer;
 
     let projection;
@@ -29,6 +30,9 @@
     let svg;
     let sensitivity = 0.25;
     let intervalID;
+    let timer;
+
+    const speedFactor = 0.0005;
 
 
     $: if (svg && projection && width && height) {
@@ -63,14 +67,16 @@
 
         svg.selectAll("image.flight")
         .each(function(d) {
-            const isVisible = d3.geoDistance(d, center) <= visiblethreshold;
+            const isVisible = d3.geoDistance(d.coords, center) <= visiblethreshold;
 
             if (isVisible) {
 
-                const [x, y] = projection(d);
+                const [x, y] = projection(d. coords);
                 d3.select(this)
                 .attr("x", x - (iconSize / 2))
                 .attr("y", y - (iconSize / 2))
+
+                .attr("transform", `rotate(${d.heading}, ${x}, ${y})`)
                 .style("display", "block");
             } else {
                 d3.select(this)
@@ -87,15 +93,24 @@
 
 
     function drawFlightsOnGlobe(flights) {
-        const coordinates = flights
+        flightData = flights
         .filter(flight => flight[5] != null && flight[6] != null)
-        .map(flight => [flight[5], flight[6]]);
+        .map(flight => ({
+        coords: [flight[5], flight[6]],
+        heading: flight[10] || 0,
+        velocity: flight[9] || 0,
+        callSign: flight[1] || "N/A"
+// Here I extract the flight coordinates and heading. The 5 and 6 are the [long, lat] indexes from the json. The 10 is the heading index. With 0 being a fallback, if heading cannot be found.
+
+
+    }));
+        
 
 
         const iconSize = 30;
 
         svg.selectAll("image.flight")
-        .data(coordinates)
+        .data(flightData)
         .join(enter => enter.append("image")
             .attr("class", "flight")
             .attr("href", "/flight-plane-svgrepo-com.svg")
@@ -312,6 +327,27 @@
         .call(drag)
         .call(zoom);
 
+        timer = d3.timer((elapsed => {
+
+            if (!flightData || flightData.length === 0) return;
+
+            flightData.forEach(d => {
+                if(d.velocity && d.velocity > 0) {
+
+
+                    const rad = (d.heading * Math.PI) /180;
+
+                    const dLat = Math.cos(rad) * d.velocity * speedFactor;
+                    const dLon = Math.sin(rad) * d.velocity * speedFactor;
+
+
+                    d.coords[0] += dLon;
+                    d.coords[1] += dLat;
+
+                }
+            })
+        }))
+
         
 
 
@@ -347,6 +383,7 @@
 
         return () => {
             clearInterval(intervalID);
+            if (timer) timer.stop();
         }
     
         
@@ -385,6 +422,12 @@
             width: 100vw;
             height: 100vh;
             background-color: darkblue;
+        }
+
+        :global(image.flight) {
+            box-sizing: border-box;
+            transition: all 0.5s ease-in-out;
+
         }
 
         h1 {
