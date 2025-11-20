@@ -74,7 +74,7 @@
         if (!svg || !projection || flightData.length === 0) return;
 
         const center =[-projection.rotate()[0], -projection.rotate()[1]];
-        const iconSize = 30;
+        const iconSize = 20;
 
 
         svg.selectAll("image.flight")
@@ -135,7 +135,7 @@
         
 
 
-        const iconSize = 30;
+        const iconSize = 20;
 
         svg.selectAll("image.flight")
         .data(flightData, d => d.id)
@@ -478,10 +478,14 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
-            z-index: -100;
+            
             width: 100vw;
             height: 100vh;
-            background-color: darkblue;
+
+            background-image: url("/UI_IMG/Space_IMG.jpg");
+            background-size: cover;
+            background-position: center;
+            /* background-color: darkblue; */
         }
 
         /* :global(image.flight) {
@@ -490,9 +494,16 @@
         } */
 
         h1 {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 6.5em;
+            margin: 1em auto;
+            margin-bottom: 0;
             box-sizing: border-box;
             transition: all 0.5s ease-in-out;
             color: white;
+            border: 2px solid green;
         }
         :global(#globe) {
             display: block;
