@@ -4,7 +4,7 @@ import Tooltip from './TooltipFromAction.svelte.svelte';
 
 export function tooltip(element) {
 	let div;
-	let title;
+	// let title;
 	let tooltipComponent;
 	function mouseOver(event) {
 		// NOTE: remove the `title` attribute, to prevent showing the default browser tooltip
