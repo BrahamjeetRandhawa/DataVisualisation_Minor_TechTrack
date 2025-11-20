@@ -11,6 +11,9 @@
     import * as topojson from 'topojson-client';
     import worldJson from 'world-atlas/countries-110m.json'
 
+    import Tooltip from './Tooltip.svelte';
+    import { tooltip } from './tooltip';
+    import { tooltip as tooltipv1 } from './tooltip.v1';
 
     import { onMount } from 'svelte'
     
@@ -44,6 +47,10 @@
     let timer;
 
     const speedFactor = 0.0000005;
+
+    let hoveredFlight = null;
+    let mouseX = 0;
+    let mouseY = 0;
 
 
     $: if (svg && projection && width && height) {
@@ -143,7 +150,21 @@
             .attr("class", "flight")
             .attr("href", "/flight-plane-svgrepo-com.svg")
             .attr("width", iconSize)
-            .attr("height", iconSize),
+            .attr("height", iconSize)
+
+            .on("mouseover", (event, d) => {
+                hoveredFlight = d;
+                mouseX = event.pageX;
+                mouseY = event.pageY;
+            })
+
+            .on("mousemove", (event) => {
+                tooltipX = event.pageX;
+                tooltipY = event.pageY;
+            })
+            .on("mouseout", () => {
+                hoveredFlight = null;
+            }),
             // .attr("r", 2)
             // .attr("fill", "red"),
             update => update,
@@ -177,7 +198,7 @@
                 const storedData = localStorage.getItem(CACHE_KEY);
                 const storedTime = localStorage.getItem(CACHE_TIMESTAMP);
 
-                if (storedData && storedTime (now - storedTime < CACHE_DURATION)) {
+                if (storedData && storedTime (nowData - storedTime < CACHE_DURATION)) {
                     console.log('localStorage is being used!');
                     allFlights = JSON.parse(storedData);
                     return;
@@ -461,12 +482,16 @@
 
 	<svg id="globe" bind:this={svgContainer}></svg>
 
+    {#if hoveredFlight}
+    <div 
+        class="tooltip-wrapper"
+        style="top: {mouseY}px; left: {mouseX}px;" >
+    <Tooltip data={hoveredFlight} />
+    </div>
+    {/if}
 
 
 
-
-
-    
 
     <style>
         /* *,*::before,*::after {
@@ -508,7 +533,18 @@
         :global(#globe) {
             display: block;
             margin: 0 auto;
-            cursor: move;
+            cursor: pointer;
+        }
+        
+        :global(#globe):active {
+            cursor: grabbing
+        }
+
+        .tooltip-wrapper {
+            position: absolute;
+            pointer-events: none;
+            transform: translate(15px, 15px);
+            z-index: 1000;
         }
     </style>
     
