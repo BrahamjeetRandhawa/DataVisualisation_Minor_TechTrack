@@ -32,6 +32,7 @@
     let height;
 
 
+    // dataHandling for the aircrafts
     let allFlights = [];
     let flightData = [];
     let svgContainer;
@@ -48,9 +49,13 @@
 
     const speedFactor = 0.0000005;
 
+    // For hover effect on aircrafts
     let hoveredFlight = null;
     let mouseX = 0;
     let mouseY = 0;
+
+    // For flight stats on card
+    let selectedFlight = null;
 
 
     $: if (svg && projection && width && height) {
@@ -144,7 +149,12 @@
         heading: flight[10] || 0,
         velocity: flight[9] || 0,
         callSign: flight[1] || "N/A",
-        id: flight[0]
+        origin_country: flight[2] || "N/A",
+        id: flight[0],
+        longitude: flight[5],
+        latitude: flight[6],
+        vertical_rate: flight[11],
+        geo_altitude: flight[13]
 // Here I extract the flight coordinates and heading. The 5 and 6 are the [long, lat] indexes from the json. The 10 is the heading index. With 0 being a fallback, if heading cannot be found.
 
 
@@ -158,11 +168,22 @@
         .data(flightData, d => d.id)
         .join(enter => enter.append("image")
             .attr("class", "flight")
+            // Aircraft icon
             .attr("href", "/flight-plane-svgrepo-com.svg")
 
             // Here the airplanes size is determined at start
             .attr("width", iconSize)
             .attr("height", iconSize)
+
+            .on("click", (event, d) => {
+                // This prevents the drag and click issue on the screen. 
+                event.stopPropagation();
+
+                // This is the state of the flights
+                selectedFlight = d;
+
+                console.log("Flight selected:", d); 
+            })
 
             .on("mouseover", (event, d) => {
                 hoveredFlight = d;
@@ -170,6 +191,10 @@
                 mouseY = event.pageY;
 
                 d3.select(this)
+                .raise();
+
+                hoveredFlight = d;
+                d3.select(event.currentTarget)
                 .raise();
             })
 
@@ -499,11 +524,27 @@
 
 	<svg id="globe" bind:this={svgContainer}></svg>
 
+    <!-- With the '{#if (data)}', the code within only happens when this is triggerd on the screen. This code snippet will only show up when hovered over the aircrafts. -->
     {#if hoveredFlight}
     <div 
         class="tooltip-wrapper"
         style="top: {mouseY}px; left: {mouseX}px;" >
     <Tooltip data={hoveredFlight} />
+    </div>
+    {/if}
+
+
+    {#if selectedFlight}
+    <div class="flight-card">
+        <header>
+            <button class="closeButton" on:click={() => selectedFlight = null}>x</button>
+            <h2>Call-sign {selectedFlight.callSign || 'N/A'}</h2>
+            <p>Speed in km/h {selectedFlight.velocity || 'N/A'}</p>
+            <p>coordinates ({selectedFlight.longitude} {selectedFlight.latitude})</p>
+            <p>Origin country {selectedFlight.origin_country || "N/A"}</p>
+            <p>Vertical rate {selectedFlight.vertical_rate}</p>
+            <p>altitude in meters {selectedFlight.geo_altitude}</p>
+        </header>
     </div>
     {/if}
 
@@ -572,6 +613,42 @@
             pointer-events: none;
             transform: translate(15px, 15px);
             z-index: 1000;
+        }
+
+        /* Card UI */
+
+        .flight-card {
+            display: flex;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 35%;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 70%);
+            color: white;
+            border-radius: 15px;
+        }
+
+        .closeButton {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            /* "X" styling */
+            font-size: 36px;
+            font-weight: 700;
+            color: white;
+            /* ------ENDING------ */
+
+            padding: 0;
+            width: 1em;
+            height: 1em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            /* ------Box styling------ */
+
+            background-color: rgba(0, 0, 0, 80%);
         }
     </style>
     
