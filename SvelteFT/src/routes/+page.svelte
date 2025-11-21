@@ -57,8 +57,9 @@
     // For flight stats on card
     let selectedFlight = null;
 
-    // Aircraft default size
+    // Aircraft sizes
     let iconSize = 25;
+    let currentSize;
 
 
     $: if (svg && projection && width && height) {
@@ -111,7 +112,7 @@
             const p = projection(d.coords);
             if (!p) return null;
 
-            let currentSize = (hoveredFlight && d.id === hoveredFlight.id) ? 50 : 25;
+            currentSize = (hoveredFlight && d.id === hoveredFlight.id) ? 50 : 25;
 
             const x = p[0] - (currentSize / 2);
             const y = p[1] - (currentSize / 2);
@@ -156,8 +157,8 @@
             .attr("href", "/flight-plane-svgrepo-com.svg")
 
             // Here the airplanes size is determined at start
-            .attr("width", iconSize)
-            .attr("height", iconSize)
+            .attr("width", currentSize)
+            .attr("height", currentSize)
 
             .on("click", (event, d) => {
                 // This prevents the drag and click issue on the screen. 
@@ -522,12 +523,12 @@
     <div class="flight-card">
         <header>
             <button class="closeButton" on:click={() => selectedFlight = null}>x</button>
-            <h2>Call-sign {selectedFlight.callSign || 'N/A'}</h2>
-            <p>Speed in km/h {selectedFlight.velocity || 'N/A'}</p>
-            <p>coordinates ({selectedFlight.longitude} {selectedFlight.latitude})</p>
-            <p>Origin country {selectedFlight.origin_country || "N/A"}</p>
-            <p>Vertical rate {selectedFlight.vertical_rate}</p>
-            <p>altitude in meters {selectedFlight.geo_altitude}</p>
+            <h2>Call-sign: {selectedFlight.callSign || 'N/A'}</h2>
+            <p>Speed in km/h: {selectedFlight.velocity * 3.6 || 'N/A'}</p>
+            <p>coordinates: ({selectedFlight.longitude} {selectedFlight.latitude})</p>
+            <p>Origin country: {selectedFlight.origin_country || "N/A"}</p>
+            <p>Vertical rate: {selectedFlight.vertical_rate}</p>
+            <p>altitude in meters: {selectedFlight.geo_altitude}</p>
         </header>
     </div>
     {/if}
@@ -608,6 +609,7 @@
             left: 20px;
             width: 30%;
             height: 100vh;
+            padding-left: 10px;
             background-color: rgba(0, 0, 0, 70%);
             color: white;
             border-radius: 15px;
@@ -629,6 +631,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
 
             /* ------Box styling------ */
 
