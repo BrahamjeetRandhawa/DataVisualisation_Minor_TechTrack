@@ -57,6 +57,9 @@
     // For flight stats on card
     let selectedFlight = null;
 
+    // Aircraft default size
+    let iconSize = 25;
+
 
     $: if (svg && projection && width && height) {
         svg
@@ -78,6 +81,7 @@
     }
 
 
+    // The visibleThreshold keeps the planes from rendering behind the globe. the pi / 2 = 1/2pi. This also equals to 90 degrees, because 2pi is 360 degrees. Th globe has 2 parts with 90 degree radius, which means, everything above it should be hidden and not rendered.
 
 
     const visibleThreshold = Math.PI / 2;
@@ -85,15 +89,18 @@
     function updateFlights() {
         if (!svg || !projection || flightData.length === 0) return;
 
+        // Here the center of the globe van be found by not rotating the globe. Because the globe begins in Norwich England, which is the center for [long, lat] coordinates.
         const center =[-projection.rotate()[0], -projection.rotate()[1]];
-        const iconSize = 25;
+        // const iconSize = 25;
 
 
+        // ------Aircraft icons------
         svg.selectAll("image.flight")
         .style("display", d => {
             const dist = d3.geoDistance(d.coords, center);
             return dist > visibleThreshold ? "none" : "block";
         })
+        // Here the width and height of the aircraft are determind by the hover state. If the hover is applied to the aircraft, the size will increase to 50 and otherwise it will stay 25. With this the UI get better to understand, and the clickables on the screen is also better understandable.
         .attr("width", d => {
             return (hoveredFlight && d.id === hoveredFlight.id) ? 50 : 25;
         })
@@ -104,7 +111,7 @@
             const p = projection(d.coords);
             if (!p) return null;
 
-            const currentSize = (hoveredFlight && d.id === hoveredFlight.id) ? 50 : 25;
+            let currentSize = (hoveredFlight && d.id === hoveredFlight.id) ? 50 : 25;
 
             const x = p[0] - (currentSize / 2);
             const y = p[1] - (currentSize / 2);
@@ -114,33 +121,12 @@
         .classed("highlighted", d => hoveredFlight && d.id === hoveredFlight.id)
     }
 
-        // svg.selectAll("image.flight")
-        // .each(function(d) {
-        //     const isVisible = d3.geoDistance(d.coords, center) <= visiblethreshold;
-
-        //     if (isVisible) {
-
-        //         const [x, y] = projection(d. coords);
-        //         d3.select(this)
-        //         .attr("x", x - (iconSize / 2))
-        //         .attr("y", y - (iconSize / 2))
-
-        //         .attr("transform", `rotate(${d.heading}, ${x}, ${y})`)
-        //         .style("display", "block");
-        //     } else {
-        //         d3.select(this)
-        //         .style("display", "none")
-        //     }
-    //     })
-    
 
 
 
 
 
-
-
-
+    // ------Data cleaning for aircrafts------
     function drawFlightsOnGlobe(flights) {
         flightData = flights
         .filter(flight => flight[5] != null && flight[6] != null)
@@ -155,14 +141,12 @@
         latitude: flight[6],
         vertical_rate: flight[11],
         geo_altitude: flight[13]
-// Here I extract the flight coordinates and heading. The 5 and 6 are the [long, lat] indexes from the json. The 10 is the heading index. With 0 being a fallback, if heading cannot be found.
-
+        // Here I extract the data that I need for my globe. For instance the coordinates is needed to determine the position of the airplanes on the globe. The [long, lat] can also be shown on screen to the user to let the user further undeerstand the position of the aircraft.
 
     }));
         
 
-
-        const iconSize = 25;
+        // const iconSize = 25;
 
         svg.selectAll("image.flight")
         .data(flightData, d => d.id)
@@ -604,9 +588,9 @@
             cursor: pointer;
         }
 
-        :global(image.flight.highlighted) {
+        /* :global(image.flight.highlighted) {
             filter: brightness(118%), invert(48%);
-        }
+        } */
 
         .tooltip-wrapper {
             position: absolute;
@@ -622,7 +606,7 @@
             position: absolute;
             top: 20px;
             left: 20px;
-            width: 35%;
+            width: 30%;
             height: 100vh;
             background-color: rgba(0, 0, 0, 70%);
             color: white;
