@@ -81,7 +81,7 @@
         if (!svg || !projection || flightData.length === 0) return;
 
         const center =[-projection.rotate()[0], -projection.rotate()[1]];
-        const iconSize = 20;
+        const iconSize = 25;
 
 
         svg.selectAll("image.flight")
@@ -89,14 +89,24 @@
             const dist = d3.geoDistance(d.coords, center);
             return dist > visibleThreshold ? "none" : "block";
         })
+        .attr("width", d => {
+            return (hoveredFlight && d.id === hoveredFlight.id) ? 50 : 25;
+        })
+        .attr("height", d => {
+            return (hoveredFlight && d.id === hoveredFlight.id) ? 50 : 25;
+        })
         .attr("transform", d => {
             const p = projection(d.coords);
             if (!p) return null;
 
-            const x = p[0] - (iconSize / 2);
-            const y = p[1] - (iconSize / 2);
-            return `translate(${x}, ${y}) rotate(${d.heading}, ${(iconSize / 2)}, ${(iconSize / 2)})`;
+            const currentSize = (hoveredFlight && d.id === hoveredFlight.id) ? 50 : 25;
+
+            const x = p[0] - (currentSize / 2);
+            const y = p[1] - (currentSize / 2);
+            return `translate(${x}, ${y}) rotate(${d.heading}, ${(currentSize / 2)}, ${(currentSize / 2)})`;
         })
+
+        .classed("highlighted", d => hoveredFlight && d.id === hoveredFlight.id)
     }
 
         // svg.selectAll("image.flight")
@@ -142,13 +152,15 @@
         
 
 
-        const iconSize = 20;
+        const iconSize = 25;
 
         svg.selectAll("image.flight")
         .data(flightData, d => d.id)
         .join(enter => enter.append("image")
             .attr("class", "flight")
             .attr("href", "/flight-plane-svgrepo-com.svg")
+
+            // Here the airplanes size is determined at start
             .attr("width", iconSize)
             .attr("height", iconSize)
 
@@ -156,6 +168,9 @@
                 hoveredFlight = d;
                 mouseX = event.pageX;
                 mouseY = event.pageY;
+
+                d3.select(this)
+                .raise();
             })
 
             .on("mousemove", (event) => {
@@ -164,6 +179,8 @@
             })
             .on("mouseout", () => {
                 hoveredFlight = null;
+
+                updateFlights();
             }),
             // .attr("r", 2)
             // .attr("fill", "red"),
@@ -538,6 +555,16 @@
         
         :global(#globe):active {
             cursor: grabbing
+        }
+
+        :global(image.flight) {
+            /* border: 2px solid green; */
+            transition: width 0.1s, height 0.1s;
+            cursor: pointer;
+        }
+
+        :global(image.flight.highlighted) {
+            filter: brightness(118%), invert(48%);
         }
 
         .tooltip-wrapper {
