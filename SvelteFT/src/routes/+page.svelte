@@ -141,7 +141,8 @@
         longitude: flight[5],
         latitude: flight[6],
         vertical_rate: flight[11],
-        geo_altitude: flight[13]
+        geo_altitude: flight[13],
+        on_ground: flight[8]
         // Here I extract the data that I need for my globe. For instance the coordinates is needed to determine the position of the airplanes on the globe. The [long, lat] can also be shown on screen to the user to let the user further undeerstand the position of the aircraft.
 
     }));
@@ -529,6 +530,7 @@
             <p>Origin country: {selectedFlight.origin_country || "N/A"}</p>
             <p>Vertical rate: {selectedFlight.vertical_rate}</p>
             <p>altitude in meters: {selectedFlight.geo_altitude}</p>
+            <p>flight is [selectedFlight.on_ground]</p>
         </header>
     </div>
     {/if}
