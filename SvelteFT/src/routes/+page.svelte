@@ -14,6 +14,8 @@
     import Tooltip from './Tooltip.svelte';
     import { tooltip } from './tooltip';
     import { tooltip as tooltipv1 } from './tooltip.v1';
+    import { fly, scale, fade } from 'svelte/transition';
+    import { cubicOut } from 'svelte/easing'
 
     import { onMount } from 'svelte'
     
@@ -487,7 +489,7 @@
 	<svg id="globe" bind:this={svgContainer}></svg>
 
     <!-- With the '{#if (data)}', the code within only happens when this is triggerd on the screen. This code snippet will only show up when hovered over the aircrafts. -->
-    {#if hoveredFlight}
+    {#if hoveredFlight && !selectedFlight}
     <div 
         class="tooltip-wrapper"
         style="top: {mouseY}px; left: {mouseX}px;" >
@@ -497,7 +499,9 @@
 
 
     {#if selectedFlight}
-    <div class="flight-card">
+    <!-- Here I use transition to let the click on the aircraft show an animation to further enhance the experience of the user -->
+    <div class="flight-card"
+    transition:fly={{ x: -50, opacity: 0, duration: 400, easing: cubicOut }}>
         <header>
             <button class="closeButton" on:click={() => selectedFlight = null}>x</button>
             <h2>Flight Information</h2>
@@ -554,12 +558,16 @@
             z-index: 10; 
 
 
-            width: 6.5em;
+            width: 7em;
             margin: 1em auto;
+            border-radius: 15px;
+            padding: 5px;
             margin-bottom: 0;
             box-sizing: border-box;
             transition: all 0.5s ease-in-out;
+            /* Colors and shading */
             color: white;
+            background-color: rgba(0, 0, 0, 20%);
         }
         
         h2 {
