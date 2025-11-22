@@ -142,7 +142,8 @@
         latitude: flight[6],
         vertical_rate: flight[11],
         geo_altitude: flight[13],
-        on_ground: flight[8]
+        // The ? ... : ... is called the 'ternary operator'. This operator gives certain operations by boolean. When the boolean is true, it will return the string before the ':' and false is the string after ':'.
+        on_ground: flight[8] ? "aircraft has landed" : "Aircraft is in the air"
         // Here I extract the data that I need for my globe. For instance the coordinates is needed to determine the position of the airplanes on the globe. The [long, lat] can also be shown on screen to the user to let the user further undeerstand the position of the aircraft.
 
     }));
@@ -226,7 +227,7 @@
                 const storedData = localStorage.getItem(CACHE_KEY);
                 const storedTime = localStorage.getItem(CACHE_TIMESTAMP);
 
-                if (storedData && storedTime (nowData - storedTime < CACHE_DURATION)) {
+                if (storedData && storedTime && (nowData - storedTime < CACHE_DURATION)) {
                     console.log('localStorage is being used!');
                     allFlights = JSON.parse(storedData);
                     return;
@@ -251,7 +252,7 @@
             // allFlights = flightsData;
             
             localStorage.setItem(CACHE_KEY, JSON.stringify(flightsData));
-            localStorage.setItem(CACHE_TIMESTAMP, now.toString());
+            localStorage.setItem(CACHE_TIMESTAMP, nowData.toString());
             console.log('Data secured in localStorage');
             
         } catch (error) {
@@ -459,31 +460,6 @@
 
         
 
-
-
-
-
-
-
-        // try {
-        //     const response = await fetch('/API/flights');
-
-        //     if (!response.ok) {
-        //         throw new Error('Data ophaal error');
-        //     }
-        //     if (response.ok) {
-        //         console.log('Data Succes')
-        //     }
-        //     const flightsData = await response.json();
-
-        //     allFlights = flightsData;
-            
-
-        // } catch (error) {
-        //     console.error('Fout gegevens ophalen:', error);
-        // }
-
-
         await fetchData(false);
 
         // elke 2 minuten data verversen = 120000 ms
@@ -524,13 +500,15 @@
     <div class="flight-card">
         <header>
             <button class="closeButton" on:click={() => selectedFlight = null}>x</button>
-            <h2>Call-sign: {selectedFlight.callSign || 'N/A'}</h2>
-            <p>Speed in km/h: {selectedFlight.velocity * 3.6 || 'N/A'}</p>
-            <p>coordinates: ({selectedFlight.longitude} {selectedFlight.latitude})</p>
+            <h2>Flight Information</h2>
+            <p>Call-sign: {selectedFlight.callSign || 'N/A'}</p>
+            <!-- with Number and toFixed, the velocity will be displayed without a decimal. The "Number" prevents the velocity in becoming a string -->
+            <p>Speed in km/h: {Number(selectedFlight.velocity * 3.6 || 'N/A').toFixed(0)}</p>
+            <p>coordinates: ({selectedFlight.longitude}, {selectedFlight.latitude})</p>
             <p>Origin country: {selectedFlight.origin_country || "N/A"}</p>
             <p>Vertical rate: {selectedFlight.vertical_rate}</p>
             <p>altitude in meters: {selectedFlight.geo_altitude}</p>
-            <p>flight is [selectedFlight.on_ground]</p>
+            <p>{selectedFlight.on_ground}</p>
         </header>
     </div>
     {/if}
@@ -567,14 +545,46 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            /* Fix for h1 background floating above globe */
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            /* To make sure the h1 stays on top of the globe with z-index */
+            z-index: 10; 
+
+
             width: 6.5em;
             margin: 1em auto;
             margin-bottom: 0;
             box-sizing: border-box;
             transition: all 0.5s ease-in-out;
             color: white;
-            border: 2px solid green;
         }
+        
+        h2 {
+            margin-top: 2em;
+            font-size: 32px;
+            border: 2px solid red;
+            width: 90%;
+        }
+        p {
+            /* border: 2px solid yellow; */
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 10px;
+            width: 90%;
+            height: 2em;
+            font-size: 20px;
+            border-radius: 15px;
+            margin: 1em auto;
+
+            background-color: rgba(0, 0, 0, 75%);
+
+        }
+
+
         :global(#globe) {
             display: block;
             margin: 0 auto;
@@ -605,13 +615,15 @@
         /* Card UI */
 
         .flight-card {
-            display: flex;
+            /* display: flex; */
+            /* align-items: flex-start;
+            justify-content: center; */
             position: absolute;
             top: 20px;
             left: 20px;
             width: 30%;
             height: 100vh;
-            padding-left: 10px;
+            /* padding-left: 10px; */
             background-color: rgba(0, 0, 0, 70%);
             color: white;
             border-radius: 15px;
