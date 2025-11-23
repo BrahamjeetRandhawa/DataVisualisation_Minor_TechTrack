@@ -10,6 +10,7 @@ import { json } from '@sveltejs/kit';
 
 const Flight_URL = 'https://opensky-network.org/api/states/all';
 
+const Flight_URL_2 = ''
 export async function GET() {
     try {
     const response = await fetch(Flight_URL);
@@ -30,11 +31,7 @@ export async function GET() {
 }
 }
 
-function interval() {
-    setInterval(async () => {
-        await GET();
-    }, 5000);
-}
+
 
 
 
