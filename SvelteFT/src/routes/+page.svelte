@@ -190,11 +190,15 @@
             })
 
             .on("mousemove", (event) => {
-                tooltipX = event.pageX;
-                tooltipY = event.pageY;
+                mouseX = event.pageX;
+                mouseY = event.pageY;
             })
 
-            .on("mouseout", () => {
+            .on("mouseout", (event, d) => {
+
+                if (selectedFlight && selectedFlight.id === d.id) {
+                    return;
+                }
                 hoveredFlight = null;
 
                 updateFlights();
@@ -396,10 +400,12 @@
 
     <!-- With the '{#if (data)}', the code within only happens when this is triggerd on the screen. This code snippet will only show up when hovered over the aircrafts. -->
     {#if hoveredFlight && !selectedFlight}
+
+    <!-- Here I use the '?' atribute. With this optional chaining gets available, and hoveredFlights can be null, which then results in undefined, instead of a crash. -->
     <div 
         class="tooltip-wrapper"
         style="top: {mouseY}px; left: {mouseX}px;" 
-        out:smartOut={{ key: hoveredFlight.id }}>
+        out:smartOut={{ key: hoveredFlight?.id }}>
     <Tooltip data={hoveredFlight} />
     </div>
     {/if}
@@ -408,12 +414,14 @@
     {#if selectedFlight}
     
     <!-- Here I use transition to let the click on the aircraft show an animation to further enhance the experience of the user -->
+     <!-- I use the question mark '?' to let the prevent crashes, instead it should be undefined, when not found. So what it does is, it searches for the ID, if found it will work accordingly, if not found it will only be undefined, and not crash. -->
     <div class="flight-card"
     in:receive={{ key: selectedFlight.id}}
-    out:send={{ key: selectedFlight.id }}>
+    out:send={{ key: selectedFlight?.id }}>
     <!-- transition:fly={{ x: -50, opacity: 0, duration: 400, easing: cubicOut }}> -->
         <header>
-            <button class="closeButton" on:click={() => selectedFlight = null}>x</button>
+            <!-- With the stoppropagation, I ensure that the cross button on the flight-card is the only item that is clickable. Everthing under that layer is untouchable. -->
+            <button class="closeButton" on:click|stopPropagation={() => selectedFlight = null}>x</button>
             <h2>Flight Information</h2>
             <p>Call-sign: {selectedFlight.callSign || 'N/A'}</p>
             <!-- with Number and toFixed, the velocity will be displayed without a decimal. The "Number" prevents the velocity in becoming a string -->
@@ -545,6 +553,8 @@
             background-color: rgba(0, 0, 0, 70%);
             color: white;
             border-radius: 15px;
+
+            z-index: 2000;
         }
 
         .closeButton {
@@ -558,16 +568,18 @@
             /* ------ENDING------ */
 
             padding: 0;
-            width: 1em;
-            height: 1em;
+            width: 50px;
+            height: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            z-index: 2002;
 
             /* ------Box styling------ */
 
             background-color: rgba(0, 0, 0, 80%);
+            border: none;
         }
     </style>
     
