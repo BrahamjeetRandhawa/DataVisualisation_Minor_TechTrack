@@ -1,10 +1,5 @@
-<!-- <h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p> -->
 
-
-
-
-
+<!-- ------Flight Tracker------ -->
 
 <script >
     import * as d3 from 'd3';
@@ -19,26 +14,23 @@
 
     import { onMount } from 'svelte'
     
-    // const width = 1200;
-    // const height = 1200;
-
-
     // !Important localStorage setup for flights
-
     const CACHE_KEY = 'flightDataStorage';
     const CACHE_TIMESTAMP = 'flightDataTime';
     const CACHE_DURATION = 5 * 60 * 1000;
 
+    // ------Global variables------
 
+    // The variables will be placed outside the scope. The variables cannot be used for other functions if used in one function.
     let width;
     let height;
-
 
     // dataHandling for the aircrafts
     let allFlights = [];
     let flightData = [];
     let svgContainer;
 
+    // globe and features variables
     let projection;
     let path;
     let svg;
@@ -48,7 +40,6 @@
     let intervalID;
     let hasMoved = false;
     let timer;
-
     const speedFactor = 0.0000005;
 
     // For hover effect on aircrafts
@@ -83,19 +74,15 @@
         updateFlights();
     }
 
-
     // The visibleThreshold keeps the planes from rendering behind the globe. the pi / 2 = 1/2pi. This also equals to 90 degrees, because 2pi is 360 degrees. Th globe has 2 parts with 90 degree radius, which means, everything above it should be hidden and not rendered.
-
-
     const visibleThreshold = Math.PI / 2;
 
-    function updateFlights() {
+    const updateFlights = () => {
         if (!svg || !projection || flightData.length === 0) return;
 
         // Here the center of the globe van be found by not rotating the globe. Because the globe begins in Norwich England, which is the center for [long, lat] coordinates.
         const center =[-projection.rotate()[0], -projection.rotate()[1]];
         // const iconSize = 25;
-
 
         // ------Aircraft icons------
         svg.selectAll("image.flight")
@@ -103,6 +90,7 @@
             const dist = d3.geoDistance(d.coords, center);
             return dist > visibleThreshold ? "none" : "block";
         })
+
         // Here the width and height of the aircraft are determind by the hover state. If the hover is applied to the aircraft, the size will increase to 50 and otherwise it will stay 25. With this the UI get better to understand, and the clickables on the screen is also better understandable.
         .attr("width", d => {
             return (hoveredFlight && d.id === hoveredFlight.id) ? 50 : 25;
@@ -130,7 +118,7 @@
 
 
     // ------Data cleaning for aircrafts------
-    function drawFlightsOnGlobe(flights) {
+    const drawFlightsOnGlobe = (flights) => {
         flightData = flights
         .filter(flight => flight[5] != null && flight[6] != null)
         .map(flight => ({
@@ -147,16 +135,15 @@
         // The ? ... : ... is called the 'ternary operator'. This operator gives certain operations by boolean. When the boolean is true, it will return the string before the ':' and false is the string after ':'.
         on_ground: flight[8] ? "aircraft has landed" : "Aircraft is in the air"
         // Here I extract the data that I need for my globe. For instance the coordinates is needed to determine the position of the airplanes on the globe. The [long, lat] can also be shown on screen to the user to let the user further undeerstand the position of the aircraft.
-
     }));
         
-
         // const iconSize = 25;
 
         svg.selectAll("image.flight")
         .data(flightData, d => d.id)
         .join(enter => enter.append("image")
             .attr("class", "flight")
+
             // Aircraft icon
             .attr("href", "/flight-plane-svgrepo-com.svg")
 
@@ -191,21 +178,18 @@
                 tooltipX = event.pageX;
                 tooltipY = event.pageY;
             })
+
             .on("mouseout", () => {
                 hoveredFlight = null;
 
                 updateFlights();
             }),
+
             // .attr("r", 2)
             // .attr("fill", "red"),
             update => update,
             exit => exit.remove()
         )
-        // .attr("x", (d) => projection(d) ? projection(d)[0] - (iconSize / 2) : null)
-        // .attr("y", (d) => projection(d) ? projection(d)[1] - (iconSize / 2) : null)
-        // .style("display", (d) => projection(d) ? "block" : "none")
-        
-
         updateFlights();
     }
 
@@ -214,14 +198,8 @@
         console.log("Flights has data");
     }
 
-
-
-
-
-
-
-
-    async function fetchData(forceRefresh = false) {
+    // function for localStorage in case of token limit reach
+    const fetchData = async (forceRefresh = false) => {
      try {
             const nowData = Date.now();
 
@@ -235,7 +213,6 @@
                     return;
                 }
             }
-
 
             console.log('Fresh data fetch from API works');
             const response = await fetch('/API/flights');
@@ -251,7 +228,6 @@
             if (Array.isArray(flightsData)){
                 allFlights = flightsData;
             }
-            // allFlights = flightsData;
             
             localStorage.setItem(CACHE_KEY, JSON.stringify(flightsData));
             localStorage.setItem(CACHE_TIMESTAMP, nowData.toString());
@@ -268,26 +244,11 @@
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    // The onMount function here loads as soon as the browser starts. The globe for instance should be loaded when the browser starts, because the globe is the main element on the screen. The functionality should also be loaded with it, because the globe should work accordingly when used.
     onMount( async() => {
         
-    
         initialScale = Math.min(width, height) / 2.2;
 
-
-        // const
         projection = d3.geoOrthographic()
         .rotate([0, 0])
         .center([0, 0])
@@ -295,23 +256,11 @@
         .scale(initialScale)
         .translate([width / 2, height / 2])
 
-        // currentZoom = projection.scale() || 1;
-
-
         path = d3.geoPath(projection);
 
-        // const 
         svg = d3.select(svgContainer);
 
-        // svg
-        // .attr("width", width)
-        // .attr("height", height)
-
-        // const features = worldJson
-
-        
         const countries = topojson.feature(worldJson, worldJson.objects.countries);
-
 
         svg.append("path")
         .datum({type: "Sphere"})
@@ -320,17 +269,6 @@
         .attr("fill", "#2B65EC")
         .attr("stroke", "black")
         .attr("stroke-width", 1)
-
-        // d3.select("#globe")
-        // .attr("width", width)
-        // .attr("height", height)
-
-
-
-    
-
-
-
 
         svg.selectAll(".country")
             .data(countries.features)
@@ -341,20 +279,17 @@
             .attr("fill", "grey")
             .attr("stroke", "black")
 
-
-
-
         const drag = d3.drag()
         .on("start", (event) => {
             event.subject.rotate = projection.rotate()
         })
+
         .on("drag", (event) => {
             // const sensitivity = 0.25
             const currentRotate = projection.rotate()
             // const rotate = event.subject.rotate
             const k = sensitivity
         
-
         projection.rotate([
             currentRotate[0] + event.dx * k,
             currentRotate[1] - event.dy * k,
@@ -366,30 +301,8 @@
         svg.selectAll("path.country")
         .attr("d", path)
 
-        // svg.selectAll("circle.flight")
-        // .attr("cx", (d) => projection(d) ? projection(d)[0] : null)
-        // .attr("cy", (d) => projection(d) ? projection(d)[1] : null)
-        // .style("display", (d) => projection(d) ? "block" : "none")
-
         updateFlights();
-
         })
-
-        
-
-        // const zoom = d3.zoom()
-        // .on("start",  (/** @type {any} */ event) => {
-        //     event.subject.zoom = projection.scale()
-        // })
-        // .on("zoom", (/** @type {any} */event) => {
-        //     const currentZoom = projection.zoom()
-
-        //     projection.zoom([
-        //         currentZoom[0] + event.zoom,
-        //         currentZoom[1] - event.zoom
-        //     ])
-        // })
-
 
         const zoom = d3.zoom()
         .scaleExtent([0.5, 30])
@@ -402,65 +315,52 @@
             svg.selectAll("path")
             .attr("d", path);
 
-
-
-
-            
-
+        // The if statements here gives the drag sensitivity for each zoom level. Without these if statements, the drag would become to sensitive in a zoomed level.
             if (event.transform.k > 20) {
             sensitivity = 0.01;
+        } else if (event.transform.k > 15) {
+            sensitivity = 0.05
         } else if (event.transform.k > 10) {
-            sensitivity = 0.20;
+            sensitivity = 0.10;
         } else if (event.transform.k > 5) {
-            sensitivity = 0.22;
+            sensitivity = 0.20;
         } else if (event.transform.k < 5) {
             sensitivity = 0.25;
         }
 
-        
-
-
-
-            // svg.selectAll("circle.flight")
-            // .attr("cx", (d) => projection(d) ? projection(d)[0] : null)
-            // .attr("cy", (d) => projection(d) ? projection(d)[1] : null)
-            // .style("display", (d) => projection(d) ? "block" : "none")
-
             updateFlights();
         });
         
-
+        // Here I call the drag and zoom function to enable the zoom and drag on the globe
         svg
         .call(drag)
         .call(zoom);
 
+        // With the timer function I create a flightpath animation for the aircrafts in between the real API fetch. I have done this, because the API cannot be fetched every couple of second, the API has a token limit.
         timer = d3.timer((elapsed => {
 
             if (!flightData || flightData.length === 0) return;
 
-            
             flightData.forEach(d => {
                 if(d.velocity && d.velocity > 0) {
 
-
+                    // Here the heading will be calculated by using the heading and to multiply it by PI. This will then be divided by 180 to transform it into radials. Here radials is better to use, because of the cos and sin calculation after.
                     const rad = (d.heading * Math.PI) /180;
 
+                    // In order to calculate the lat and lon. I have used cos and sin for it. cos and sin can be calculated with a triangle. The distance from the lat and long is 2 parts of a triangle. If I want to know the heading, I should calculate the vector then. Which  is the same as putting the latitude length after the latitude path. If doing so for both, there will come one point which then is the initial vector of the airplane. 
                     const dLat = Math.cos(rad) * d.velocity * speedFactor;
                     const dLon = Math.sin(rad) * d.velocity * speedFactor;
 
 
+                    // The data for the long and lat will be fetched from here.
                     d.coords[0] += dLon;
                     d.coords[1] += dLat;
                     hasMoved = true;
-
                 }
             });
-
             if(hasMoved)
             updateFlights();
         }))
-
-        
 
         await fetchData(false);
 
@@ -472,14 +372,8 @@
             clearInterval(intervalID);
             if (timer) timer.stop();
         }
-    
-        
     })
-
-
-
     </script>
-
 
 
     <svelte:window bind:innerWidth={width} bind:innerHeight={height} />
@@ -499,6 +393,7 @@
 
 
     {#if selectedFlight}
+    
     <!-- Here I use transition to let the click on the aircraft show an animation to further enhance the experience of the user -->
     <div class="flight-card"
     transition:fly={{ x: -50, opacity: 0, duration: 400, easing: cubicOut }}>
