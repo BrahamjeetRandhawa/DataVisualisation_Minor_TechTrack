@@ -9,8 +9,8 @@
     import Tooltip from './Tooltip.svelte';
     import { tooltip } from './tooltip';
     import { tooltip as tooltipv1 } from './tooltip.v1';
-    import { fly, scale, fade } from 'svelte/transition';
-    import { cubicOut } from 'svelte/easing'
+    import { fly, scale, fade, crossfade } from 'svelte/transition';
+    import { cubicOut, quintOut } from 'svelte/easing'
 
     import { onMount } from 'svelte'
     
@@ -54,6 +54,21 @@
     let iconSize = 25;
     let currentSize;
 
+    const [send, receive] = crossfade({
+        // Animation duration from tooltip to flight-card
+        duration: 600,
+        easing: quintOut,
+        // Bacup for the animation. If animation does not work, scale the animation
+        fallback: scale
+    })
+
+    // Gemini gave this code snippet to stop the animation when hovering over the aircrafts. Otherwise the aircrafts always want to animate, which takes a lot of resources and will break the globe usage.
+    const smartOut = (node, params) => {
+        if (selectedFlight) {
+            return send(node, params);
+        }
+        return fade(node, { duration: 100 });
+    }
 
     $: if (svg && projection && width && height) {
         svg
@@ -184,9 +199,6 @@
 
                 updateFlights();
             }),
-
-            // .attr("r", 2)
-            // .attr("fill", "red"),
             update => update,
             exit => exit.remove()
         )
@@ -386,7 +398,8 @@
     {#if hoveredFlight && !selectedFlight}
     <div 
         class="tooltip-wrapper"
-        style="top: {mouseY}px; left: {mouseX}px;" >
+        style="top: {mouseY}px; left: {mouseX}px;" 
+        out:smartOut={{ key: hoveredFlight.id }}>
     <Tooltip data={hoveredFlight} />
     </div>
     {/if}
@@ -396,7 +409,9 @@
     
     <!-- Here I use transition to let the click on the aircraft show an animation to further enhance the experience of the user -->
     <div class="flight-card"
-    transition:fly={{ x: -50, opacity: 0, duration: 400, easing: cubicOut }}>
+    in:receive={{ key: selectedFlight.id}}
+    out:send={{ key: selectedFlight.id }}>
+    <!-- transition:fly={{ x: -50, opacity: 0, duration: 400, easing: cubicOut }}> -->
         <header>
             <button class="closeButton" on:click={() => selectedFlight = null}>x</button>
             <h2>Flight Information</h2>
