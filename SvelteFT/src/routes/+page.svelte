@@ -173,6 +173,8 @@
                 // This is the state of the flights
                 selectedFlight = d;
 
+                fetchFlightDetails(d.id)
+
                 console.log("Flight selected:", d); 
             })
 
@@ -257,6 +259,27 @@
                 console.warn('API failed, using backup cache');
                 allFlights = JSON.parse(fallBackData);
             }
+        }
+    }
+
+    const fetchFlightDetails = async (icao24) => {
+        selectedFlight = {
+            ...selectedFlight,
+            estArrivalAirport: 'Loading...',
+            estDepartureAirport: 'Loading...'
+        };
+        try {
+            const res = await fetch(`/API/flights/${icao24}`);
+            const data = await res.json();
+
+            selectedFlight = {
+                ...selectedFlight,
+                estArrivalAirport: data.estArrivalAirport || 'Unknown',
+                estDepartureAirport: data.estDepartureAirport || 'Unknown'
+            };
+        } catch (err) {
+            console.error(err);
+            selectedFlight = { ...selectedFlight, estArrivalAirport: 'Error' };
         }
     }
 
@@ -423,6 +446,11 @@
             <!-- With the stoppropagation, I ensure that the cross button on the flight-card is the only item that is clickable. Everthing under that layer is untouchable. -->
             <button class="closeButton" on:click|stopPropagation={() => selectedFlight = null}>x</button>
             <h2>Flight Information</h2>
+            <div>
+                <p>
+                    {selectedFlight.estDepartureAirport || '?'} {selectedFlight.estArrivalAirport || '?'}
+                </p>
+            </div>
             <p>Call-sign: {selectedFlight.callSign || 'N/A'}</p>
             <!-- with Number and toFixed, the velocity will be displayed without a decimal. The "Number" prevents the velocity in becoming a string -->
             <p>Speed in km/h: {Number(selectedFlight.velocity * 3.6 || 'N/A').toFixed(0)}</p>
