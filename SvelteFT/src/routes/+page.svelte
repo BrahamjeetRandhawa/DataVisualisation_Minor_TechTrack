@@ -58,7 +58,7 @@
         // Animation duration from tooltip to flight-card
         duration: 600,
         easing: quintOut,
-        // Bacup for the animation. If animation does not work, scale the animation
+        // Backup for the animation. If animation does not work, scale the animation
         fallback: scale
     })
 
@@ -183,8 +183,8 @@
                 mouseX = event.pageX;
                 mouseY = event.pageY;
 
-                d3.select(this)
-                .raise();
+                // d3.select(this)
+                // .raise();
 
                 hoveredFlight = d;
                 d3.select(event.currentTarget)
@@ -404,7 +404,7 @@
         await fetchData(false);
 
         // elke 2 minuten data verversen = 120000 ms
-        const pollingInterval = 1000000;
+        const pollingInterval = 120000;
         intervalID = setInterval(() => fetchData(true), pollingInterval);
 
         return () => {
