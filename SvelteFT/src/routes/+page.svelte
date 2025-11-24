@@ -456,7 +456,7 @@
             <p>Speed in km/h: {Number(selectedFlight.velocity * 3.6 || 'N/A').toFixed(0)}</p>
             <p>coordinates: ({selectedFlight.longitude}, {selectedFlight.latitude})</p>
             <p>Origin country: {selectedFlight.origin_country || "N/A"}</p>
-            <p>Vertical rate: {selectedFlight.vertical_rate}</p>
+            <p>Vertical rate: {selectedFlight.vertical_rate} m/s</p>
             <p>altitude in meters: {selectedFlight.geo_altitude}</p>
             <p>{selectedFlight.on_ground}</p>
         </header>
@@ -503,7 +503,6 @@
             /* To make sure the h1 stays on top of the globe with z-index */
             z-index: 10; 
 
-
             width: 7em;
             margin: 1em auto;
             border-radius: 15px;
@@ -519,8 +518,12 @@
         h2 {
             margin-top: 2em;
             font-size: 32px;
-            border: 2px solid red;
             width: 90%;
+
+            /* Text-alignment within div */
+            align-items: start;
+            margin: 2em auto;
+            text-align: start;
         }
         p {
             /* border: 2px solid yellow; */

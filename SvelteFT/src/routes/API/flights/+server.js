@@ -3,17 +3,66 @@
 // require("dotenv").config();
 
 import { json } from '@sveltejs/kit';
+import { CLIENT_ID, CLIENT_SECRET } from '$env/static/private';
 
 // const json = require("sveltejs/kit");
 
 
 
 const Flight_URL = 'https://opensky-network.org/api/states/all';
+const Auth_URL = 'https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token';
 
-const Flight_URL_2 = ''
+
+// ------Written by AI------
+let cachedToken = null;
+let tokenExpiry = 0;
+
+async function getAccessToken() {
+    const now = Date.now();
+
+    // Return cached token if it's still valid (buffer of 60 seconds)
+    if (cachedToken && now < tokenExpiry - 60000) {
+        return cachedToken;
+    }
+
+    const params = new URLSearchParams();
+    params.append('grant_type', 'client_credentials');
+    params.append('client_id', CLIENT_ID);
+    params.append('client_secret', CLIENT_SECRET);
+
+    const response = await fetch(Auth_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: params
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to get OpenSky token! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    // Cache the token
+    cachedToken = data.access_token;
+    // data.expires_in is in seconds, convert to milliseconds
+    tokenExpiry = now + (data.expires_in * 1000);
+
+    return cachedToken;
+}
+
+// ------End of AI writing------
+
+
 export async function GET() {
     try {
-    const response = await fetch(Flight_URL);
+        const token = await getAccessToken();
+        const response = await fetch(Flight_URL, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
 
     if (!response.ok) {
         throw new Error(`OpenSky API error! status: ${response.status}`)
