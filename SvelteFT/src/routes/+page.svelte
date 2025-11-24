@@ -355,7 +355,7 @@
             .attr("d", path);
 
         // The if statements here gives the drag sensitivity for each zoom level. Without these if statements, the drag would become to sensitive in a zoomed level.
-            if (event.transform.k > 20) {
+        if (event.transform.k > 20) {
             sensitivity = 0.01;
         } else if (event.transform.k > 15) {
             sensitivity = 0.05
