@@ -143,9 +143,11 @@
                 mouseY = event.pageY;
 
                 // Select the current component and move it to the top of the SVG, which will get the tooltip above the globe
-                hoveredFlight = d;
                 d3.select(event.currentTarget)
                 .raise();
+
+                // Important to see changes made with hover
+                updateFlights();
             })
 
             // This updates coordinates while moving the mouse within the icon, which ensures the tooltip will follow the mouse cursor
