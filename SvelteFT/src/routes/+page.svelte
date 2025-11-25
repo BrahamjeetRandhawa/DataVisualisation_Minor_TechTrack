@@ -1,23 +1,21 @@
 
 <!-- ------Flight Tracker------ -->
-
 <script >
     import * as d3 from 'd3';
     import * as topojson from 'topojson-client';
-    import worldJson from 'world-atlas/countries-110m.json'
+    import FlightCard from '$lib/components/flightCard.svelte';
+    import TooltipSetup from '$lib/components/tooltipSetup.svelte';
+    import { cleanFlightData } from '$lib/components/dataCleaning';
+    import { interactions } from '$lib/components/globeInteraction';
+    import { mapDrawing } from '$lib/components/mapDrawing';
+    import { updateFlightsPosition } from '$lib/components/flightUpdates'
+    import { fetchData, fetchFlightDetails } from '$lib/components/APIService';
+    import { flightAnimation } from '$lib/components/timerBasedAnimation';
 
-    import Tooltip from './Tooltip.svelte';
-    import { tooltip } from './tooltip';
-    import { tooltip as tooltipv1 } from './tooltip.v1';
-    import { fly, scale, fade } from 'svelte/transition';
-    import { cubicOut } from 'svelte/easing'
+    import { fade, scale, crossfade } from 'svelte/transition';
+    import { cubicOut, quintOut } from 'svelte/easing'
 
     import { onMount } from 'svelte'
-    
-    // !Important localStorage setup for flights
-    const CACHE_KEY = 'flightDataStorage';
-    const CACHE_TIMESTAMP = 'flightDataTime';
-    const CACHE_DURATION = 5 * 60 * 1000;
 
     // ------Global variables------
 
@@ -36,7 +34,6 @@
     let svg;
     let initialScale;
     let currentZoom;
-    let sensitivity = 0.25;
     let intervalID;
     let hasMoved = false;
     let timer;
@@ -54,91 +51,59 @@
     let iconSize = 25;
     let currentSize;
 
+    const [send, receive] = crossfade({
+        duration: 500,
+        easing: cubicOut,
 
+        fallback(node, params) {
+            return {
+                duration: 200,
+                easing: cubicOut
+            };
+        }
+    })
+
+    // This block changes according to the change of the width and height of the screen
     $: if (svg && projection && width && height) {
+        // Update svg container dimensions
         svg
         .attr("width", width)
         .attr("height", height);
 
+        // Update projection to the middle of the screen
         projection
         .translate([width / 2, height / 2]);
 
+        // Update the path on the new globe size
         path = d3.geoPath(projection);
 
+        // Redraw th new sphere using the new path
         svg.select(".sphere")
         .attr("d", path);
 
+        // Update all country's using the new path
         svg.selectAll(".country")
         .attr("d", path);
 
+        // Apply the update and reposition everything
         updateFlights();
     }
 
-    // The visibleThreshold keeps the planes from rendering behind the globe. the pi / 2 = 1/2pi. This also equals to 90 degrees, because 2pi is 360 degrees. Th globe has 2 parts with 90 degree radius, which means, everything above it should be hidden and not rendered.
-    const visibleThreshold = Math.PI / 2;
-
+    // Apply changes on SVG, projection, flightData, hoveredFlight
     const updateFlights = () => {
-        if (!svg || !projection || flightData.length === 0) return;
-
-        // Here the center of the globe van be found by not rotating the globe. Because the globe begins in Norwich England, which is the center for [long, lat] coordinates.
-        const center =[-projection.rotate()[0], -projection.rotate()[1]];
-        // const iconSize = 25;
-
-        // ------Aircraft icons------
-        svg.selectAll("image.flight")
-        .style("display", d => {
-            const dist = d3.geoDistance(d.coords, center);
-            return dist > visibleThreshold ? "none" : "block";
-        })
-
-        // Here the width and height of the aircraft are determind by the hover state. If the hover is applied to the aircraft, the size will increase to 50 and otherwise it will stay 25. With this the UI get better to understand, and the clickables on the screen is also better understandable.
-        .attr("width", d => {
-            return (hoveredFlight && d.id === hoveredFlight.id) ? 50 : 25;
-        })
-        .attr("height", d => {
-            return (hoveredFlight && d.id === hoveredFlight.id) ? 50 : 25;
-        })
-        .attr("transform", d => {
-            const p = projection(d.coords);
-            if (!p) return null;
-
-            currentSize = (hoveredFlight && d.id === hoveredFlight.id) ? 50 : 25;
-
-            const x = p[0] - (currentSize / 2);
-            const y = p[1] - (currentSize / 2);
-            return `translate(${x}, ${y}) rotate(${d.heading}, ${(currentSize / 2)}, ${(currentSize / 2)})`;
-        })
-
-        .classed("highlighted", d => hoveredFlight && d.id === hoveredFlight.id)
-    }
-
-
-
-
-
+        updateFlightsPosition({
+            svg: svg,
+            projection: projection,
+            flightData: flightData,
+            hoveredFlight: hoveredFlight
+        });
+    };
 
     // ------Data cleaning for aircrafts------
     const drawFlightsOnGlobe = (flights) => {
-        flightData = flights
-        .filter(flight => flight[5] != null && flight[6] != null)
-        .map(flight => ({
-        coords: [flight[5], flight[6]],
-        heading: flight[10] || 0,
-        velocity: flight[9] || 0,
-        callSign: flight[1] || "N/A",
-        origin_country: flight[2] || "N/A",
-        id: flight[0],
-        longitude: flight[5],
-        latitude: flight[6],
-        vertical_rate: flight[11],
-        geo_altitude: flight[13],
-        // The ? ... : ... is called the 'ternary operator'. This operator gives certain operations by boolean. When the boolean is true, it will return the string before the ':' and false is the string after ':'.
-        on_ground: flight[8] ? "aircraft has landed" : "Aircraft is in the air"
-        // Here I extract the data that I need for my globe. For instance the coordinates is needed to determine the position of the airplanes on the globe. The [long, lat] can also be shown on screen to the user to let the user further undeerstand the position of the aircraft.
-    }));
-        
-        // const iconSize = 25;
 
+        flightData = cleanFlightData(flights);
+        
         svg.selectAll("image.flight")
         .data(flightData, d => d.id)
         .join(enter => enter.append("image")
@@ -151,43 +116,55 @@
             .attr("width", currentSize)
             .attr("height", currentSize)
 
-            .on("click", (event, d) => {
+            .on("click", async (event, d) => {
                 // This prevents the drag and click issue on the screen. 
                 event.stopPropagation();
 
                 // This is the state of the flights
-                selectedFlight = d;
+                selectedFlight = {...d, estArrivalAirport: 'Loading...'};
+
+                // the '...' means loading state
+                const details = await fetchFlightDetails(d.id);
+                selectedFlight = { ...selectedFlight, ...details };
 
                 console.log("Flight selected:", d); 
             })
 
+            // Event listeners for when the mouse enters the aircraft icon
             .on("mouseover", (event, d) => {
+                // Store the flight data to trigger the Svelte tooltip component
                 hoveredFlight = d;
+                // Get mouse coordinates to position the tooltip div element
                 mouseX = event.pageX;
                 mouseY = event.pageY;
 
-                d3.select(this)
-                .raise();
-
+                // Select the current component and move it to the top of the SVG, which will get the tooltip above the globe
                 hoveredFlight = d;
                 d3.select(event.currentTarget)
                 .raise();
             })
 
+            // This updates coordinates while moving the mouse within the icon, which ensures the tooltip will follow the mouse cursor
             .on("mousemove", (event) => {
-                tooltipX = event.pageX;
-                tooltipY = event.pageY;
+                mouseX = event.pageX;
+                mouseY = event.pageY;
             })
 
-            .on("mouseout", () => {
+            // When the mousee leaves the aircraft icon
+            .on("mouseout", (event, d) => {
+
+                // If the flight is clicked or selected, do not clear the hover state. Which keeps the aircraft highlighted
+                if (selectedFlight && selectedFlight.id === d.id) {
+                    return;
+                }
+                // Clear the hover state to hide the tooltip
                 hoveredFlight = null;
 
                 updateFlights();
             }),
-
-            // .attr("r", 2)
-            // .attr("fill", "red"),
+            // Keeps existing elements unchanged
             update => update,
+            // Removes aircrafts that are no longer selected from the data array
             exit => exit.remove()
         )
         updateFlights();
@@ -196,52 +173,6 @@
     $: if (allFlights.length > 0 && svgContainer && projection) {
         drawFlightsOnGlobe(allFlights);
         console.log("Flights has data");
-    }
-
-    // function for localStorage in case of token limit reach
-    const fetchData = async (forceRefresh = false) => {
-     try {
-            const nowData = Date.now();
-
-            if (!forceRefresh) {
-                const storedData = localStorage.getItem(CACHE_KEY);
-                const storedTime = localStorage.getItem(CACHE_TIMESTAMP);
-
-                if (storedData && storedTime && (nowData - storedTime < CACHE_DURATION)) {
-                    console.log('localStorage is being used!');
-                    allFlights = JSON.parse(storedData);
-                    return;
-                }
-            }
-
-            console.log('Fresh data fetch from API works');
-            const response = await fetch('/API/flights');
-
-            if (!response.ok) {
-                throw new Error('Data ophaal error');
-            }
-            if (response.ok) {
-                console.log('Data Succes')
-            }
-            const flightsData = await response.json();
-
-            if (Array.isArray(flightsData)){
-                allFlights = flightsData;
-            }
-            
-            localStorage.setItem(CACHE_KEY, JSON.stringify(flightsData));
-            localStorage.setItem(CACHE_TIMESTAMP, nowData.toString());
-            console.log('Data secured in localStorage');
-            
-        } catch (error) {
-            console.error('Fout gegevens ophalen:', error);
-
-            const fallBackData = localStorage.getItem(CACHE_KEY);
-            if (fallBackData) {
-                console.warn('API failed, using backup cache');
-                allFlights = JSON.parse(fallBackData);
-            }
-        }
     }
 
     // The onMount function here loads as soon as the browser starts. The globe for instance should be loaded when the browser starts, because the globe is the main element on the screen. The functionality should also be loaded with it, because the globe should work accordingly when used.
@@ -260,113 +191,29 @@
 
         svg = d3.select(svgContainer);
 
-        const countries = topojson.feature(worldJson, worldJson.objects.countries);
+        mapDrawing({ svg, path });
 
-        svg.append("path")
-        .datum({type: "Sphere"})
-        .attr("class", "sphere")
-        .attr("d", path)
-        .attr("fill", "#2B65EC")
-        .attr("stroke", "black")
-        .attr("stroke-width", 1)
-
-        svg.selectAll(".country")
-            .data(countries.features)
-            .join("path")
-            .attr("class", "country")
-            .attr("d", path)
-            // .attr("d", d3.geoPath())
-            .attr("fill", "grey")
-            .attr("stroke", "black")
-
-        const drag = d3.drag()
-        .on("start", (event) => {
-            event.subject.rotate = projection.rotate()
-        })
-
-        .on("drag", (event) => {
-            // const sensitivity = 0.25
-            const currentRotate = projection.rotate()
-            // const rotate = event.subject.rotate
-            const k = sensitivity
-        
-        projection.rotate([
-            currentRotate[0] + event.dx * k,
-            currentRotate[1] - event.dy * k,
-            currentRotate[2]
-        ]);
-
-        path = d3.geoPath(projection)
-
-        svg.selectAll("path.country")
-        .attr("d", path)
-
-        updateFlights();
-        })
-
-        const zoom = d3.zoom()
-        .scaleExtent([0.5, 30])
-        .on("zoom", event => {
-            const newScale = initialScale * event.transform.k;
-
-            projection.scale(newScale);
-
-            path = d3.geoPath(projection)
-            svg.selectAll("path")
-            .attr("d", path);
-
-        // The if statements here gives the drag sensitivity for each zoom level. Without these if statements, the drag would become to sensitive in a zoomed level.
-            if (event.transform.k > 20) {
-            sensitivity = 0.01;
-        } else if (event.transform.k > 15) {
-            sensitivity = 0.05
-        } else if (event.transform.k > 10) {
-            sensitivity = 0.10;
-        } else if (event.transform.k > 5) {
-            sensitivity = 0.20;
-        } else if (event.transform.k < 5) {
-            sensitivity = 0.25;
-        }
-
-            updateFlights();
+        interactions({
+            svg: svg,
+            projection: projection,
+            path: path,
+            initialScale: initialScale,
+            updateFlights: updateFlights
         });
-        
-        // Here I call the drag and zoom function to enable the zoom and drag on the globe
-        svg
-        .call(drag)
-        .call(zoom);
 
-        // With the timer function I create a flightpath animation for the aircrafts in between the real API fetch. I have done this, because the API cannot be fetched every couple of second, the API has a token limit.
-        timer = d3.timer((elapsed => {
+       timer = flightAnimation({
+        flightData: flightData,
+        updateFlights: updateFlights
+       });
 
-            if (!flightData || flightData.length === 0) return;
-
-            flightData.forEach(d => {
-                if(d.velocity && d.velocity > 0) {
-
-                    // Here the heading will be calculated by using the heading and to multiply it by PI. This will then be divided by 180 to transform it into radials. Here radials is better to use, because of the cos and sin calculation after.
-                    const rad = (d.heading * Math.PI) /180;
-
-                    // In order to calculate the lat and lon. I have used cos and sin for it. cos and sin can be calculated with a triangle. The distance from the lat and long is 2 parts of a triangle. If I want to know the heading, I should calculate the vector then. Which  is the same as putting the latitude length after the latitude path. If doing so for both, there will come one point which then is the initial vector of the airplane. 
-                    const dLat = Math.cos(rad) * d.velocity * speedFactor;
-                    const dLon = Math.sin(rad) * d.velocity * speedFactor;
-
-
-                    // The data for the long and lat will be fetched from here.
-                    d.coords[0] += dLon;
-                    d.coords[1] += dLat;
-                    hasMoved = true;
-                }
-            });
-            if(hasMoved)
-            updateFlights();
-        }))
-
-        await fetchData(false);
+       allFlights = await fetchData(false);
 
         // elke 2 minuten data verversen = 120000 ms
-        const pollingInterval = 1000000;
-        intervalID = setInterval(() => fetchData(true), pollingInterval);
+        // "allFlights" will be updated
+        const pollingInterval = 120000;
+        intervalID = setInterval(async () => {
+            allFlights = await fetchData(true);
+        }, pollingInterval);
 
         return () => {
             clearInterval(intervalID);
@@ -375,186 +222,40 @@
     })
     </script>
 
+<!-- I am placing the HTML in the Svelte component, because the HTML uses elements that are not considered HTML. For instance the '<svelte:window....../>' -->
 
+<!-- ------HTML------ -->
+
+    <!-- Here the width and height are determined by the size of the window that is being used. -->
     <svelte:window bind:innerWidth={width} bind:innerHeight={height} />
 
+    <!-- Title -->
     <h1>Flight Tracker</h1>
 
 	<svg id="globe" bind:this={svgContainer}></svg>
 
     <!-- With the '{#if (data)}', the code within only happens when this is triggerd on the screen. This code snippet will only show up when hovered over the aircrafts. -->
     {#if hoveredFlight && !selectedFlight}
-    <div 
-        class="tooltip-wrapper"
-        style="top: {mouseY}px; left: {mouseX}px;" >
-    <Tooltip data={hoveredFlight} />
-    </div>
-    {/if}
+    <TooltipSetup
+    hoveredFlight={hoveredFlight}
+    mouseX={mouseX}
+    mouseY={mouseY}
+    send={send}
+    receive={receive}
+    />
 
+    {/if}
 
     {#if selectedFlight}
-    
-    <!-- Here I use transition to let the click on the aircraft show an animation to further enhance the experience of the user -->
-    <div class="flight-card"
-    transition:fly={{ x: -50, opacity: 0, duration: 400, easing: cubicOut }}>
-        <header>
-            <button class="closeButton" on:click={() => selectedFlight = null}>x</button>
-            <h2>Flight Information</h2>
-            <p>Call-sign: {selectedFlight.callSign || 'N/A'}</p>
-            <!-- with Number and toFixed, the velocity will be displayed without a decimal. The "Number" prevents the velocity in becoming a string -->
-            <p>Speed in km/h: {Number(selectedFlight.velocity * 3.6 || 'N/A').toFixed(0)}</p>
-            <p>coordinates: ({selectedFlight.longitude}, {selectedFlight.latitude})</p>
-            <p>Origin country: {selectedFlight.origin_country || "N/A"}</p>
-            <p>Vertical rate: {selectedFlight.vertical_rate}</p>
-            <p>altitude in meters: {selectedFlight.geo_altitude}</p>
-            <p>{selectedFlight.on_ground}</p>
-        </header>
-    </div>
+    <!-- In svelte, not using the capital letters will result in using the tag as html instead of javascript. -->
+    <FlightCard
+    selectedFlight={selectedFlight}
+    on:close={() => selectedFlight = null}
+    receive={receive}
+    send={send}
+    />
     {/if}
 
-
-
-
-    <style>
-        /* *,*::before,*::after {
-            box-sizing: border-box;
-            transition: all 0.5s ease-in-out;
-        } */
-
-        :global(body) {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            
-            width: 100vw;
-            height: 100vh;
-
-            background-image: url("/UI_IMG/Space_IMG.jpg");
-            background-size: cover;
-            background-position: center;
-            /* background-color: darkblue; */
-        }
-
-        /* :global(image.flight) {
-            box-sizing: border-box;
-            transition: all 0.5s ease-in-out;
-        } */
-
-        h1 {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            /* Fix for h1 background floating above globe */
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            /* To make sure the h1 stays on top of the globe with z-index */
-            z-index: 10; 
-
-
-            width: 7em;
-            margin: 1em auto;
-            border-radius: 15px;
-            padding: 5px;
-            margin-bottom: 0;
-            box-sizing: border-box;
-            transition: all 0.5s ease-in-out;
-            /* Colors and shading */
-            color: white;
-            background-color: rgba(0, 0, 0, 20%);
-        }
-        
-        h2 {
-            margin-top: 2em;
-            font-size: 32px;
-            border: 2px solid red;
-            width: 90%;
-        }
-        p {
-            /* border: 2px solid yellow; */
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            padding: 10px;
-            width: 90%;
-            height: 2em;
-            font-size: 20px;
-            border-radius: 15px;
-            margin: 1em auto;
-
-            background-color: rgba(0, 0, 0, 75%);
-
-        }
-
-
-        :global(#globe) {
-            display: block;
-            margin: 0 auto;
-            cursor: pointer;
-        }
-        
-        :global(#globe):active {
-            cursor: grabbing
-        }
-
-        :global(image.flight) {
-            /* border: 2px solid green; */
-            transition: width 0.1s, height 0.1s;
-            cursor: pointer;
-        }
-
-        /* :global(image.flight.highlighted) {
-            filter: brightness(118%), invert(48%);
-        } */
-
-        .tooltip-wrapper {
-            position: absolute;
-            pointer-events: none;
-            transform: translate(15px, 15px);
-            z-index: 1000;
-        }
-
-        /* Card UI */
-
-        .flight-card {
-            /* display: flex; */
-            /* align-items: flex-start;
-            justify-content: center; */
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 30%;
-            height: 100vh;
-            /* padding-left: 10px; */
-            background-color: rgba(0, 0, 0, 70%);
-            color: white;
-            border-radius: 15px;
-        }
-
-        .closeButton {
-            position: absolute;
-            right: 10px;
-            top: 10px;
-            /* "X" styling */
-            font-size: 36px;
-            font-weight: 700;
-            color: white;
-            /* ------ENDING------ */
-
-            padding: 0;
-            width: 1em;
-            height: 1em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-
-            /* ------Box styling------ */
-
-            background-color: rgba(0, 0, 0, 80%);
-        }
-    </style>
     
 
 

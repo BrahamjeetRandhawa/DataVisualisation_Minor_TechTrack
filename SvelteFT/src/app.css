@@ -1,0 +1,133 @@
+
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            
+            width: 100vw;
+            height: 100vh;
+
+            background-image: url("/UI_IMG/Space_IMG.jpg");
+            background-size: cover;
+            background-position: center;
+            /* background-color: darkblue; */
+        }
+
+        /* :global(image.flight) {
+            box-sizing: border-box;
+            transition: all 0.5s ease-in-out;
+        } */
+
+        h1 {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Fix for h1 background floating above globe */
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            /* To make sure the h1 stays on top of the globe with z-index */
+            z-index: 10; 
+
+            width: 7em;
+            margin: 1em auto;
+            border-radius: 15px;
+            padding: 5px;
+            margin-bottom: 0;
+            box-sizing: border-box;
+            transition: all 0.5s ease-in-out;
+            /* Colors and shading */
+            color: white;
+            background-color: rgba(0, 0, 0, 20%);
+        }
+        
+        #globe {
+            display: block;
+            margin: 0 auto;
+            cursor: pointer;
+        }
+        
+        #globe:active {
+            cursor: grabbing
+        }
+
+        image.flight {
+            /* border: 2px solid green; */
+            transition: width 0.1s, height 0.1s;
+            cursor: pointer;
+        }
+
+        /* :global(image.flight.highlighted) {
+            filter: brightness(118%), invert(48%);
+        } */
+
+        .tooltip-wrapper {
+            position: absolute;
+            pointer-events: none;
+            transform: translate(15px, 15px);
+            z-index: 1000;
+        }
+
+        /* ------Card UI------ */
+
+        h2 {
+            margin-top: 2em;
+            font-size: 32px;
+            width: 90%;
+
+            /* Text-alignment within div */
+            align-items: start;
+            margin: 2em auto;
+            text-align: start;
+        }
+        p {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 10px;
+            width: 90%;
+            height: 2em;
+            font-size: 20px;
+            border-radius: 15px;
+            margin: 1em auto;
+
+            background-color: rgba(0, 0, 0, 75%);
+
+        }
+
+        .flight-card {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 30%;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 70%);
+            color: white;
+            border-radius: 15px;
+            z-index: 2000;
+        }
+
+        .closeButton {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            font-size: 36px;
+            font-weight: 700;
+            color: white;
+            padding: 0;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 2002;
+
+            /* ------Box styling------ */
+            background-color: rgba(0, 0, 0, 80%);
+            border: none;
+        }
+        /* ------ending------ */
+        
