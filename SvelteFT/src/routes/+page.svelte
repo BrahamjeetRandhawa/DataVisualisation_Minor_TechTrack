@@ -214,8 +214,11 @@
         allFlights = await fetchData(false);
 
         // elke 2 minuten data verversen = 120000 ms
+        // "allFlights" will be updated
         const pollingInterval = 120000;
-        intervalID = setInterval(() => fetchData(true), pollingInterval);
+        intervalID = setInterval(async () => {
+            allFlights = await fetchData(true);
+        }, pollingInterval);
 
         return () => {
             clearInterval(intervalID);

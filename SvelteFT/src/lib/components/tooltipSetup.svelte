@@ -27,7 +27,7 @@
         out:send={{ key: activeFlight.id }}
         in:receive={{ key: activeFlight.id }}
         >
-    <Tooltip data={hoveredFlight} />
+    <Tooltip data={activeFlight} />
     </div>
 
 
