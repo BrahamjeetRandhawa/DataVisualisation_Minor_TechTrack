@@ -102,9 +102,9 @@ export async function GET() {
         const response = await fetch(Flight_URL, {
             headers: {
                 'Authorization': `Bearer ${token}`,
-                // The server.js will try to fetch the data from the api for 5 seconds if longer, it will disconnect on its own and show fallback message
+                // The server.js will try to fetch the data from the api for 20 seconds if longer, it will disconnect on its own and show fallback message
             },
-            signal: AbortSignal.timeout(5000)
+            signal: AbortSignal.timeout(20000)
         });
 
     if (!response.ok) {
