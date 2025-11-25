@@ -4,11 +4,18 @@
     import Tooltip from '$lib/components/Tooltip.svelte';
     import { tooltip } from '$lib/components/tooltip';
     import { tooltip as tooltipv1 } from '$lib/components/tooltip.v1';
-    import { fade } from 'svelte/transition';
 
     export let hoveredFlight;
     export let mouseX = 0;
     export let mouseY = 0;
+    export let send;
+    export let receive;
+
+    let activeFlight = hoveredFlight;
+
+    $: if (hoveredFlight) {
+        activeFlight = hoveredFlight;
+    }
 
 </script>
 
@@ -17,7 +24,9 @@
     <div 
         class="tooltip-wrapper"
         style="top: {mouseY}px; left: {mouseX}px;" 
-        transition:fade={{ duration: 100 }}>
+        out:send={{ key: activeFlight.id }}
+        in:receive={{ key: activeFlight.id }}
+        >
     <Tooltip data={hoveredFlight} />
     </div>
 

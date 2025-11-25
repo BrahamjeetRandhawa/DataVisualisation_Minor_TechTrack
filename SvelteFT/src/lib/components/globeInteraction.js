@@ -1,8 +1,10 @@
 
 import * as d3 from 'd3';
 
-export const interactions = ({ svg, projection, path, initialScale, onUpdate, sensitivity }) => {
+export const interactions = ({ svg, projection, path, initialScale, updateFlights }) => {
 
+    // I am using sensitivity here, because sensitivt is being used active here
+    let sensitivity = 0.25;
 
 const drag = d3.drag()
         .on("start", (event) => {
@@ -23,10 +25,11 @@ const drag = d3.drag()
 
         path = d3.geoPath(projection)
 
-        svg.selectAll("path.country")
+        svg.selectAll("path")
         .attr("d", path)
-
-        updateFlights();
+        
+        // Update the aircrafts linked to the main updateFlight
+        if (updateFlights) updateFlights();
         })
 
         const zoom = d3.zoom()
@@ -53,7 +56,8 @@ const drag = d3.drag()
             sensitivity = 0.25;
         }
 
-            updateFlights();
+        // Update the aircrafts linked to the main updateFlight
+        if (updateFlights) updateFlights();
         });
         
         // Here I call the drag and zoom function to enable the zoom and drag on the globe

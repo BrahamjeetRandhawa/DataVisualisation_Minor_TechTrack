@@ -2,26 +2,19 @@
 
 <script>
 
-
-    import { fly, scale, fade, crossfade } from 'svelte/transition';
+    import { fade } from 'svelte/transition';
     import { quintOut } from 'svelte/easing';
+    import { createEventDispatcher } from 'svelte';
 
     // Receive the data from the main '+page.svelte'
     export let selectedFlight; 
+    export let receive;
+    export let send;
+    const dispatch = createEventDispatcher();
     
     // This function closes the flight card information
-    import { createEventDispatcher } from 'svelte';
-    const dispatch = createEventDispatcher();
 
-    const [send, receive] = crossfade({
-        // Animation duration from tooltip to flight-card
-        duration: 600,
-        easing: quintOut,
-        // Backup for the animation. If animation does not work, scale the animation
-        fallback: scale
-    })
-
-    close=() => {
+    const close=() => {
         dispatch('close');
     }
 
@@ -30,9 +23,8 @@
 <!-- Here I use transition to let the click on the aircraft show an animation to further enhance the experience of the user -->
 <!-- I use the question mark '?' to let the prevent crashes, instead it should be undefined, when not found. So what it does is, it searches for the ID, if found it will work accordingly, if not found it will only be undefined, and not crash. -->
 <div class="flight-card"
-    in:receive={{ key: selectedFlight.id}}
+    in:receive={{ key: selectedFlight?.id}}
     out:send={{ key: selectedFlight?.id }}>
-    <!-- transition:fly={{ x: -50, opacity: 0, duration: 400, easing: cubicOut }}> -->
         <header>
             <!-- With the stoppropagation, I ensure that the cross button on the flight-card is the only item that is clickable. Everthing under that layer is untouchable. -->
             <button class="closeButton" on:click|stopPropagation={close}>x</button>
