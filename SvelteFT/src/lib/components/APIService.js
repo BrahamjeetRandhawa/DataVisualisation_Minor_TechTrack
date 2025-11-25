@@ -45,7 +45,7 @@ export const fetchData = async (forceRefresh = false) => {
             return [];
             
         } catch (error) {
-            console.error('erro fetching data:', error);
+            console.error('error fetching data:', error);
 
             const fallBackData = localStorage.getItem(CACHE_KEY);
             if (fallBackData) {
