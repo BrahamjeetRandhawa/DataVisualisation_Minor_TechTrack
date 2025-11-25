@@ -1,11 +1,12 @@
 <script>
-	import favicon from '$lib/assets/favicon.svg';
+	import Airplane from '$lib/assets/Airplane.svg';
+	import '../app.css';
 
 	let { children } = $props();
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<link rel="icon" href={Airplane} />
 </svelte:head>
 
 {@render children()}

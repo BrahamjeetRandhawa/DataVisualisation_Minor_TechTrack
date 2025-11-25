@@ -4,10 +4,11 @@
 <script >
     import * as d3 from 'd3';
     import * as topojson from 'topojson-client';
-    import worldJson from 'world-atlas/countries-110m.json'
-    import FlightCard from '$lib/components/flightCard.svelte'
-    import TooltipSetup from '$lib/components/tooltipSetup.svelte'
-    import { cleanFlightData } from '$lib/components/dataCleaning'
+    import worldJson from 'world-atlas/countries-110m.json';
+    import FlightCard from '$lib/components/flightCard.svelte';
+    import TooltipSetup from '$lib/components/tooltipSetup.svelte';
+    import { cleanFlightData } from '$lib/components/dataCleaning';
+    import{ interactions } from '$lib/components/globeInteraction';
 
     import { fade, scale, crossfade } from 'svelte/transition';
     import { cubicOut, quintOut } from 'svelte/easing'
@@ -298,62 +299,13 @@
             .attr("fill", "grey")
             .attr("stroke", "black")
 
-        const drag = d3.drag()
-        .on("start", (event) => {
-            event.subject.rotate = projection.rotate()
-        })
-
-        .on("drag", (event) => {
-            // const sensitivity = 0.25
-            const currentRotate = projection.rotate()
-            // const rotate = event.subject.rotate
-            const k = sensitivity
-        
-        projection.rotate([
-            currentRotate[0] + event.dx * k,
-            currentRotate[1] - event.dy * k,
-            currentRotate[2]
-        ]);
-
-        path = d3.geoPath(projection)
-
-        svg.selectAll("path.country")
-        .attr("d", path)
-
-        updateFlights();
-        })
-
-        const zoom = d3.zoom()
-        .scaleExtent([0.5, 30])
-        .on("zoom", event => {
-            const newScale = initialScale * event.transform.k;
-
-            projection.scale(newScale);
-
-            path = d3.geoPath(projection)
-            svg.selectAll("path")
-            .attr("d", path);
-
-        // The if statements here gives the drag sensitivity for each zoom level. Without these if statements, the drag would become to sensitive in a zoomed level.
-        if (event.transform.k > 20) {
-            sensitivity = 0.01;
-        } else if (event.transform.k > 15) {
-            sensitivity = 0.05
-        } else if (event.transform.k > 10) {
-            sensitivity = 0.10;
-        } else if (event.transform.k > 5) {
-            sensitivity = 0.20;
-        } else if (event.transform.k < 5) {
-            sensitivity = 0.25;
-        }
-
-            updateFlights();
+        interactions({
+            svg: svg,
+            projection: projection,
+            path: path,
+            initialScale: initialScale,
+            onUpdate: updateFlights
         });
-        
-        // Here I call the drag and zoom function to enable the zoom and drag on the globe
-        svg
-        .call(drag)
-        .call(zoom);
 
         // With the timer function I create a flightpath animation for the aircrafts in between the real API fetch. I have done this, because the API cannot be fetched every couple of second, the API has a token limit.
         timer = d3.timer((elapsed => {
@@ -421,85 +373,6 @@
    
     {/if}
 
-
-
-
-    <style>
-        /* *,*::before,*::after {
-            box-sizing: border-box;
-            transition: all 0.5s ease-in-out;
-        } */
-
-        :global(body) {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            
-            width: 100vw;
-            height: 100vh;
-
-            background-image: url("/UI_IMG/Space_IMG.jpg");
-            background-size: cover;
-            background-position: center;
-            /* background-color: darkblue; */
-        }
-
-        /* :global(image.flight) {
-            box-sizing: border-box;
-            transition: all 0.5s ease-in-out;
-        } */
-
-        h1 {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            /* Fix for h1 background floating above globe */
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            /* To make sure the h1 stays on top of the globe with z-index */
-            z-index: 10; 
-
-            width: 7em;
-            margin: 1em auto;
-            border-radius: 15px;
-            padding: 5px;
-            margin-bottom: 0;
-            box-sizing: border-box;
-            transition: all 0.5s ease-in-out;
-            /* Colors and shading */
-            color: white;
-            background-color: rgba(0, 0, 0, 20%);
-        }
-        
-        
-
-
-        :global(#globe) {
-            display: block;
-            margin: 0 auto;
-            cursor: pointer;
-        }
-        
-        :global(#globe):active {
-            cursor: grabbing
-        }
-
-        :global(image.flight) {
-            /* border: 2px solid green; */
-            transition: width 0.1s, height 0.1s;
-            cursor: pointer;
-        }
-
-        /* :global(image.flight.highlighted) {
-            filter: brightness(118%), invert(48%);
-        } */
-
-        /* Card UI */
-
-        
-    </style>
     
 
 

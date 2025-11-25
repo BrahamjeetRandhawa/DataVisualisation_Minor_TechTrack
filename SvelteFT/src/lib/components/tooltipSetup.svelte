@@ -22,11 +22,3 @@
     </div>
 
 
-    <style>
-        .tooltip-wrapper {
-            position: absolute;
-            pointer-events: none;
-            transform: translate(15px, 15px);
-            z-index: 1000;
-        }
-    </style>

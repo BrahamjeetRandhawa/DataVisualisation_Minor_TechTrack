@@ -21,7 +21,7 @@
         fallback: scale
     })
 
-    function close() {
+    close=() => {
         dispatch('close');
     }
 
@@ -52,74 +52,3 @@
             <p>{selectedFlight.on_ground}</p>
         </header>
     </div>
-
-    <style>
-
-        h2 {
-            margin-top: 2em;
-            font-size: 32px;
-            width: 90%;
-
-            /* Text-alignment within div */
-            align-items: start;
-            margin: 2em auto;
-            text-align: start;
-        }
-        p {
-            /* border: 2px solid yellow; */
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            padding: 10px;
-            width: 90%;
-            height: 2em;
-            font-size: 20px;
-            border-radius: 15px;
-            margin: 1em auto;
-
-            background-color: rgba(0, 0, 0, 75%);
-
-        }
-
-        .flight-card {
-            /* display: flex; */
-            /* align-items: flex-start;
-            justify-content: center; */
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 30%;
-            height: 100vh;
-            /* padding-left: 10px; */
-            background-color: rgba(0, 0, 0, 70%);
-            color: white;
-            border-radius: 15px;
-
-            z-index: 2000;
-        }
-
-        .closeButton {
-            position: absolute;
-            right: 10px;
-            top: 10px;
-            /* "X" styling */
-            font-size: 36px;
-            font-weight: 700;
-            color: white;
-            /* ------ENDING------ */
-
-            padding: 0;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 2002;
-
-            /* ------Box styling------ */
-
-            background-color: rgba(0, 0, 0, 80%);
-            border: none;
-        }
-    </style>
