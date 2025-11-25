@@ -2,6 +2,7 @@
 
 import * as d3 from 'd3';
 
+// The visibleThreshold keeps the planes from rendering behind the globe. the pi / 2 = 1/2pi. This also equals to 90 degrees, because 2pi is 360 degrees. Th globe has 2 parts with 90 degree radius, which means, everything above it should be hidden and not rendered.
 const visibleThreshold = Math.PI / 2;
 
 export const updateFlightsPosition = ({ svg, projection, flightData, hoveredFlight, currentSize }) => {

@@ -62,28 +62,33 @@
         }
     })
 
+    // This block changes according to the change of the width and height of the screen
     $: if (svg && projection && width && height) {
+        // Update svg container dimensions
         svg
         .attr("width", width)
         .attr("height", height);
 
+        // Update projection to the middle of the screen
         projection
         .translate([width / 2, height / 2]);
 
+        // Update the path on the new globe size
         path = d3.geoPath(projection);
 
+        // Redraw th new sphere using the new path
         svg.select(".sphere")
         .attr("d", path);
 
+        // Update all country's using the new path
         svg.selectAll(".country")
         .attr("d", path);
 
+        // Apply the update and reposition everything
         updateFlights();
     }
 
-    // The visibleThreshold keeps the planes from rendering behind the globe. the pi / 2 = 1/2pi. This also equals to 90 degrees, because 2pi is 360 degrees. Th globe has 2 parts with 90 degree radius, which means, everything above it should be hidden and not rendered.
-    const visibleThreshold = Math.PI / 2;
-
+    // Apply changes on SVG, projection, flightData, hoveredFlight
     const updateFlights = () => {
         updateFlightsPosition({
             svg: svg,
@@ -124,31 +129,41 @@
                 console.log("Flight selected:", d); 
             })
 
+            // Event listeners for when the mouse enters the aircraft icon
             .on("mouseover", (event, d) => {
+                // Store the flight data to trigger the Svelte tooltip component
                 hoveredFlight = d;
+                // Get mouse coordinates to position the tooltip div element
                 mouseX = event.pageX;
                 mouseY = event.pageY;
 
+                // Select the current component and move it to the top of the SVG, which will get the tooltip above the globe
                 hoveredFlight = d;
                 d3.select(event.currentTarget)
                 .raise();
             })
 
+            // This updates coordinates while moving the mouse within the icon, which ensures the tooltip will follow the mouse cursor
             .on("mousemove", (event) => {
                 mouseX = event.pageX;
                 mouseY = event.pageY;
             })
 
+            // When the mousee leaves the aircraft icon
             .on("mouseout", (event, d) => {
 
+                // If the flight is clicked or selected, do not clear the hover state. Which keeps the aircraft highlighted
                 if (selectedFlight && selectedFlight.id === d.id) {
                     return;
                 }
+                // Clear the hover state to hide the tooltip
                 hoveredFlight = null;
 
                 updateFlights();
             }),
+            // Keeps existing elements unchanged
             update => update,
+            // Removes aircrafts that are no longer selected from the data array
             exit => exit.remove()
         )
         updateFlights();
@@ -227,9 +242,14 @@
     })
     </script>
 
+<!-- I am placing the HTML in the Svelte component, because the HTML uses elements that are not considered HTML. For instance the '<svelte:window....../>' -->
 
+<!-- ------HTML------ -->
+
+    <!-- Here the width and height are determined by the size of the window that is being used. -->
     <svelte:window bind:innerWidth={width} bind:innerHeight={height} />
 
+    <!-- Title -->
     <h1>Flight Tracker</h1>
 
 	<svg id="globe" bind:this={svgContainer}></svg>
@@ -246,7 +266,6 @@
 
     {/if}
 
-
     {#if selectedFlight}
     <!-- In svelte, not using the capital letters will result in using the tag as html instead of javascript. -->
     <FlightCard
@@ -255,7 +274,6 @@
     receive={receive}
     send={send}
     />
-   
     {/if}
 
     
