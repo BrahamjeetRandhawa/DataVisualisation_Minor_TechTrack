@@ -5,11 +5,10 @@
     import * as d3 from 'd3';
     import * as topojson from 'topojson-client';
     import worldJson from 'world-atlas/countries-110m.json'
+    import FlightCard from '$lib/components/flightCard.svelte'
+    import TooltipSetup from '$lib/components/tooltipSetup.svelte'
 
-    import Tooltip from './Tooltip.svelte';
-    import { tooltip } from './tooltip';
-    import { tooltip as tooltipv1 } from './tooltip.v1';
-    import { fly, scale, fade, crossfade } from 'svelte/transition';
+    import { fade, scale, crossfade } from 'svelte/transition';
     import { cubicOut, quintOut } from 'svelte/easing'
 
     import { onMount } from 'svelte'
@@ -54,21 +53,21 @@
     let iconSize = 25;
     let currentSize;
 
-    const [send, receive] = crossfade({
-        // Animation duration from tooltip to flight-card
-        duration: 600,
-        easing: quintOut,
-        // Backup for the animation. If animation does not work, scale the animation
-        fallback: scale
-    })
+    // const [send, receive] = crossfade({
+    //     // Animation duration from tooltip to flight-card
+    //     duration: 600,
+    //     easing: quintOut,
+    //     // Backup for the animation. If animation does not work, scale the animation
+    //     fallback: scale
+    // })
 
     // Gemini gave this code snippet to stop the animation when hovering over the aircrafts. Otherwise the aircrafts always want to animate, which takes a lot of resources and will break the globe usage.
-    const smartOut = (node, params) => {
-        if (selectedFlight) {
-            return send(node, params);
-        }
-        return fade(node, { duration: 100 });
-    }
+    // const smartOut = (node, params) => {
+    //     if (selectedFlight) {
+    //         return send(node, params);
+    //     }
+    //     return fade(node, { duration: 100 });
+    // }
 
     $: if (svg && projection && width && height) {
         svg
@@ -182,9 +181,6 @@
                 hoveredFlight = d;
                 mouseX = event.pageX;
                 mouseY = event.pageY;
-
-                // d3.select(this)
-                // .raise();
 
                 hoveredFlight = d;
                 d3.select(event.currentTarget)
@@ -423,44 +419,22 @@
 
     <!-- With the '{#if (data)}', the code within only happens when this is triggerd on the screen. This code snippet will only show up when hovered over the aircrafts. -->
     {#if hoveredFlight && !selectedFlight}
+    <TooltipSetup
+    hoveredFlight={hoveredFlight}
+    mouseX={mouseX}
+    mouseY={mouseY}
+    />
 
-    <!-- Here I use the '?' atribute. With this optional chaining gets available, and hoveredFlights can be null, which then results in undefined, instead of a crash. -->
-    <div 
-        class="tooltip-wrapper"
-        style="top: {mouseY}px; left: {mouseX}px;" 
-        out:smartOut={{ key: hoveredFlight?.id }}>
-    <Tooltip data={hoveredFlight} />
-    </div>
     {/if}
 
 
     {#if selectedFlight}
-    
-    <!-- Here I use transition to let the click on the aircraft show an animation to further enhance the experience of the user -->
-     <!-- I use the question mark '?' to let the prevent crashes, instead it should be undefined, when not found. So what it does is, it searches for the ID, if found it will work accordingly, if not found it will only be undefined, and not crash. -->
-    <div class="flight-card"
-    in:receive={{ key: selectedFlight.id}}
-    out:send={{ key: selectedFlight?.id }}>
-    <!-- transition:fly={{ x: -50, opacity: 0, duration: 400, easing: cubicOut }}> -->
-        <header>
-            <!-- With the stoppropagation, I ensure that the cross button on the flight-card is the only item that is clickable. Everthing under that layer is untouchable. -->
-            <button class="closeButton" on:click|stopPropagation={() => selectedFlight = null}>x</button>
-            <h2>Flight Information</h2>
-            <div>
-                <p>
-                    {selectedFlight.estDepartureAirport || '?'} {selectedFlight.estArrivalAirport || '?'}
-                </p>
-            </div>
-            <p>Call-sign: {selectedFlight.callSign || 'N/A'}</p>
-            <!-- with Number and toFixed, the velocity will be displayed without a decimal. The "Number" prevents the velocity in becoming a string -->
-            <p>Speed in km/h: {Number(selectedFlight.velocity * 3.6 || 'N/A').toFixed(0)}</p>
-            <p>coordinates: ({selectedFlight.longitude}, {selectedFlight.latitude})</p>
-            <p>Origin country: {selectedFlight.origin_country || "N/A"}</p>
-            <p>Vertical rate: {selectedFlight.vertical_rate} m/s</p>
-            <p>altitude in meters: {selectedFlight.geo_altitude}</p>
-            <p>{selectedFlight.on_ground}</p>
-        </header>
-    </div>
+    <!-- In svelte, not using the capital letters will result in using the tag as html instead of javascript. -->
+    <FlightCard
+    selectedFlight={selectedFlight}
+    on:close={() => selectedFlight = null}
+    />
+   
     {/if}
 
 
@@ -515,31 +489,7 @@
             background-color: rgba(0, 0, 0, 20%);
         }
         
-        h2 {
-            margin-top: 2em;
-            font-size: 32px;
-            width: 90%;
-
-            /* Text-alignment within div */
-            align-items: start;
-            margin: 2em auto;
-            text-align: start;
-        }
-        p {
-            /* border: 2px solid yellow; */
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            padding: 10px;
-            width: 90%;
-            height: 2em;
-            font-size: 20px;
-            border-radius: 15px;
-            margin: 1em auto;
-
-            background-color: rgba(0, 0, 0, 75%);
-
-        }
+        
 
 
         :global(#globe) {
@@ -562,56 +512,9 @@
             filter: brightness(118%), invert(48%);
         } */
 
-        .tooltip-wrapper {
-            position: absolute;
-            pointer-events: none;
-            transform: translate(15px, 15px);
-            z-index: 1000;
-        }
-
         /* Card UI */
 
-        .flight-card {
-            /* display: flex; */
-            /* align-items: flex-start;
-            justify-content: center; */
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 30%;
-            height: 100vh;
-            /* padding-left: 10px; */
-            background-color: rgba(0, 0, 0, 70%);
-            color: white;
-            border-radius: 15px;
-
-            z-index: 2000;
-        }
-
-        .closeButton {
-            position: absolute;
-            right: 10px;
-            top: 10px;
-            /* "X" styling */
-            font-size: 36px;
-            font-weight: 700;
-            color: white;
-            /* ------ENDING------ */
-
-            padding: 0;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 2002;
-
-            /* ------Box styling------ */
-
-            background-color: rgba(0, 0, 0, 80%);
-            border: none;
-        }
+        
     </style>
     
 
