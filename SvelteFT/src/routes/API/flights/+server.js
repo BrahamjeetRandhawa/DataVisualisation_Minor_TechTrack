@@ -60,7 +60,8 @@ export async function GET() {
         const token = await getAccessToken();
         const response = await fetch(Flight_URL, {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+            signal: AbortSignal.timeout(5000)
             }
         });
 
