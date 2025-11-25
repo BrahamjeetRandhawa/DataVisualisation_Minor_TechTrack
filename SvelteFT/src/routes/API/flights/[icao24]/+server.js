@@ -4,6 +4,35 @@ import { json } from '@sveltejs/kit'
 import { CLIENT_ID, CLIENT_SECRET } from '$env/static/private'
 
 
+const MOCK_AIRPORTS = [
+    'EHAM', // Schiphol
+    'EGLL', // Heathrow
+    'LFPG', // Charles de Gaulle
+    'EDDF', // Frankfurt
+    'KJFK', // JFK New York
+    'OMDB', // Dubai
+    'WSSS', // Singapore
+    'EBBR', // Brussel
+    'LEMD'  // Madrid
+];
+
+function getMockRoute(icao24) {
+    // We gebruiken de icao24 code om "random" te kiezen, maar wel consistent
+    // zodat als je de pagina herlaadt, hetzelfde vliegtuig dezelfde route houdt (optioneel).
+    // Of gewoon volledig random:
+    const depIndex = Math.floor(Math.random() * MOCK_AIRPORTS.length);
+    let arrIndex = Math.floor(Math.random() * MOCK_AIRPORTS.length);
+    
+    // Zorg dat vertrek en aankomst niet hetzelfde zijn
+    if (arrIndex === depIndex) {
+        arrIndex = (arrIndex + 1) % MOCK_AIRPORTS.length;
+    }
+
+    return {
+        estDepartureAirport: MOCK_AIRPORTS[depIndex],
+        estArrivalAirport: MOCK_AIRPORTS[arrIndex]
+    };
+}
 
 export const GET = async ({ params, fetch}) => {
     const { icao24 } = params;
@@ -78,6 +107,7 @@ try {
     
 } catch (error) {
     console.error('Error fetching flight stats:', error);
-    return json({ error: 'Failed to fetch the details'}, { status: 500 });
+    const mockRoute = getMockRoute(icao24)
+    return json(mockRoute);
 }
 }
