@@ -1,17 +1,9 @@
 
-
-// require("dotenv").config();
-
 import { json } from '@sveltejs/kit';
 import { CLIENT_ID, CLIENT_SECRET } from '$env/static/private';
 
-// const json = require("sveltejs/kit");
-
-
-
 const Flight_URL = 'https://opensky-network.org/api/states/all';
 const Auth_URL = 'https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token';
-
 
 // ------Written by AI------
 let cachedToken = null;
@@ -53,7 +45,6 @@ async function getAccessToken() {
 }
 
 // ------End of AI writing------
-
 
 export async function GET() {
     try {
