@@ -51,10 +51,14 @@
     let iconSize = 25;
     let currentSize;
 
+    // The fallback run when the elemens is not transiting as should be
+    // The 'node' here is the DOM element, whcih gets manipulated. It will show a new layer onclick 
     const [send, receive] = crossfade({
         duration: 500,
         easing: cubicOut,
 
+        // 'params' is the object that is getting passed to the html
+        // The 'key' property is used to match the animation with its endpoint
         fallback(node, params) {
             return {
                 duration: 200,
