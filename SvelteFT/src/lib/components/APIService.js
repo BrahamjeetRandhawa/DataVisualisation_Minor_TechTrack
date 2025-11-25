@@ -26,29 +26,34 @@ export const fetchData = async (forceRefresh = false) => {
             const response = await fetch('/API/flights');
 
             if (!response.ok) {
-                throw new Error('Data ophaal error');
+                console.error('Data fetch error:', response.status);
+                return[];
             }
             if (response.ok) {
                 console.log('Data Succes')
             }
             const flightsData = await response.json();
 
-            if (Array.isArray(flightsData)){
+            if (Array.isArray(flightsData)) {
             
             localStorage.setItem(CACHE_KEY, JSON.stringify(flightsData));
             localStorage.setItem(CACHE_TIMESTAMP, nowData.toString());
             console.log('Data secured in localStorage');
-            }
+
             return flightsData;
+            }
+            return [];
             
         } catch (error) {
-            console.error('Fout gegevens ophalen:', error);
+            console.error('erro fetching data:', error);
 
             const fallBackData = localStorage.getItem(CACHE_KEY);
             if (fallBackData) {
                 console.warn('API failed, using backup cache');
                 return JSON.parse(fallBackData);
             }
+            
+            return[];
         }
     }
 

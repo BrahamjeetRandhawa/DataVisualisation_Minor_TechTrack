@@ -47,13 +47,16 @@ async function getAccessToken() {
 // ------End of AI writing------
 
 export async function GET() {
+
+    console.log('Server is starting. Auth is working?', CLIENT_ID ? "YES" : "NO");
     try {
         const token = await getAccessToken();
         const response = await fetch(Flight_URL, {
             headers: {
                 'Authorization': `Bearer ${token}`,
+                // The server.js will try to fetch the data from the api for 5 seconds if longer, it will disconnect on its own and show fallback message
+            },
             signal: AbortSignal.timeout(5000)
-            }
         });
 
     if (!response.ok) {
@@ -68,7 +71,7 @@ export async function GET() {
     
 } catch (error) {
     console.error('Failed to fetch data', error);
-    return json({ error: "Failed to fetch data" }, { status: 500 });
+    return json([]);
 }
 }
 
