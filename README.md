@@ -4,7 +4,7 @@ TechTrack_Minor_Datavisualisation
 
 # Real-Time 3D Flight Tracker
 
-[https://flighttracker-re80xfhl9-brahams-projects-cae4c1fe.vercel.app/] | [https://github.com/BrahamjeetRandhawa/DataVisualisation_Minor_TechTrack]
+[https://flight-tracker-awna.onrender.com/] | [https://github.com/BrahamjeetRandhawa/DataVisualisation_Minor_TechTrack]
 
 ## Overview
 A flight tracking application built with **Svelte** and **d3**. Unlike standard 2D map trackers, this projects real-time flights on an interactive 3D map.
