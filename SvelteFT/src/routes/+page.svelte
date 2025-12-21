@@ -11,6 +11,7 @@
     import { updateFlightsPosition } from '$lib/components/flightUpdates'
     import { fetchData, fetchFlightDetails } from '$lib/components/APIService';
     import { flightAnimation } from '$lib/components/timerBasedAnimation';
+    import SearchPanel from '$lib/components/searchPanel.svelte';
 
     import { fade, scale, crossfade } from 'svelte/transition';
     import { cubicOut, quintOut } from 'svelte/easing'
@@ -236,7 +237,11 @@
     <svelte:window bind:innerWidth={width} bind:innerHeight={height} />
 
     <!-- Title -->
-    <h1>Flight Tracker</h1>
+     <SearchPanel on:search={(e) => console.log("Search to:", e.detail.query)} />
+    <!-- <div class="Text-container">
+        <h1>Flight Tracker</h1>
+        <p class="Description">This flighttracker gives insight about the passengers aircrafts in real time</p>
+    </div> -->
 
 	<svg id="globe" bind:this={svgContainer}></svg>
 

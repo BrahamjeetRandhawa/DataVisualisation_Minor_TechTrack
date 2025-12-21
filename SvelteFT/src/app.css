@@ -19,30 +19,156 @@
             transition: all 0.5s ease-in-out;
         } */
 
-        h1 {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            /* Fix for h1 background floating above globe */
+        .panel-container {
             position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            /* To make sure the h1 stays on top of the globe with z-index */
+            bottom: 0%;
+            left: 2%;
+            width: 25em;
+            
+
+            background: rgba(15, 23, 42, 0.8); /* Donkere achtergrond past vaak goed bij globes */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            
+            border-radius: 15px;
+            z-index: 2000;
+
+            color: white;
+
+            overflow: hidden;
+            height: 90px;
+
+            transition: height 0.3s ease-in-out;
+            
+        }
+
+        .panel-container.open {
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        /* .Text-container {
+            display: flex;
+            align-items: left;
+            justify-content: center;
+            flex-direction: column;
+            position: absolute;
+            bottom: 0;
+            left: 2%;
             z-index: 10; 
 
-            width: 7em;
+            width: 30em;
             margin: 1em auto;
             border-radius: 15px;
             padding: 5px;
+            padding-left: 10px;
             margin-bottom: 0;
             box-sizing: border-box;
             transition: all 0.5s ease-in-out;
-            /* Colors and shading */
             color: white;
             background-color: rgba(0, 0, 0, 20%);
+        } */
+
+        h1 {
+            font-size: 42px;
+            padding-left: 2%;
+            margin-top: 0;
+
+        }
+
+        .Description {
+            font-size: 18px;
+            margin-top: 0;
+            padding-left: 2%;
+        }
+
+        .handle-bar-area {
+            width: 100%;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grabbing;
         }
         
+        .handle-bar {
+            width: 15%;
+            height: 10px;
+            background-color: white;
+            border-radius: 5px;
+            margin: 10px auto;
+            cursor: grab;
+        }
+
+        .handle-bar:focus {
+            box-shadow: 2px 2px 20px rgba(255, 255, 255, 0.5);
+            cursor: grabbing;
+        }
+
+        .search-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-left: 2%;
+            border-radius: 20px;
+            padding: 5px;
+            width: 92%;
+            height: 2.3em;
+            background-color: rgba(0, 0, 0, 30%);
+        }
+
+        .search-wrapper input {
+            width: 100%;
+            height: 1.8em;
+            border-radius: 20px;
+            border: none;
+            padding: 5px;
+            color: white;
+            background-color: rgba(0, 0, 0, 30%);
+            transition: all 0.3s ease-in-out;
+        }
+
+        .search-wrapper input:focus {
+            box-shadow: 2px 2px 20px rgba(255, 255, 255, 0.5);
+            background-color: rgba(0, 0, 0, 90%);
+
+            width: 70%;
+            transition: all 0.3s ease-in-out;
+            outline: none;
+        }
+
+        .search-button {
+            position: relative;
+            height: 2.3em;
+            width: 0;
+            border-radius: 20px;
+            padding: 0;
+            border: none;
+
+            opacity: 0;
+            
+            transform: translateX(5px);
+        }
+
+        .search-wrapper input:focus + .search-button {
+            height: 2.3em;
+            width: 100%;
+            border-radius: 20px;
+            opacity: 1;
+            max-width: 25%;
+            background-color: rgba(0, 0, 0, 90%);
+            box-shadow: 2px 2px 20px rgba(255, 255, 255, 0.5);
+            color: white;
+            transition: all 0.3s ease-in-out;
+        }
+
+
+
+
+
         #globe {
             display: block;
             margin: 0 auto;
@@ -82,7 +208,8 @@
             margin: 2em auto;
             text-align: start;
         }
-        p {
+
+        .overlayText {
             display: flex;
             align-items: center;
             justify-content: flex-start;
@@ -100,7 +227,7 @@
         .flight-card {
             position: absolute;
             top: 20px;
-            left: 20px;
+            left: 2%;
             width: 30%;
             height: 100vh;
             background-color: rgba(0, 0, 0, 70%);
