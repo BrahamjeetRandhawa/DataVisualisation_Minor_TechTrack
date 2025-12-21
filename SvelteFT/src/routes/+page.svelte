@@ -26,6 +26,7 @@
 
     // dataHandling for the aircrafts
     let allFlights = [];
+    let searchQuery = '';
     let flightData = [];
     let svgContainer;
 
@@ -51,6 +52,16 @@
     // Aircraft sizes
     let iconSize = 25;
     let currentSize;
+
+
+    
+
+    $: if (svgContainer && projection && allFlights.length > 0) {
+        currentSize = iconSize;
+
+        const trigger = searchQuery;
+        drawFlightsOnGlobe(allFlights);
+    };
 
     // The fallback run when the elemens is not transiting as should be
     // The 'node' here is the DOM element, whcih gets manipulated. It will show a new layer onclick 
@@ -102,12 +113,36 @@
             flightData: flightData,
             hoveredFlight: hoveredFlight
         });
+
+        const query = searchQuery ? searchQuery.toLowerCase().trim() : '';
+
+
+        svg.selectAll("image.flight")
+                .attr("width", d => {
+                    const callSign = d.callSign ? d.callSign.toLowerCase().trim() : '';
+                    const isMatch = query !== '' && callSign.includes(query);
+                    return isMatch ? 50 : currentSize;
+                })
+                .attr("height", d => {
+                    const callSign = d.callSign ? d.callSign.toLowerCase().trim() : '';
+                    const isMatch = query !== '' && callSign.includes(query);
+                    return isMatch ? 50 : currentSize;
+                })
+                .each(function(d) {
+                    const callSign = d.callSign ? d.callSign.toLowerCase().trim() : '';
+                    if (query !== '' && callSign.includes(query)) {
+                        // Bring matched aircraft to front
+                        d3.select(this).raise();
+                    }
+                })
     };
 
     // ------Data cleaning for aircrafts------
     const drawFlightsOnGlobe = (flights) => {
 
         flightData = cleanFlightData(flights);
+
+        const query = searchQuery ? searchQuery.toLowerCase().trim() : '';
         
         svg.selectAll("image.flight")
         .data(flightData, d => d.id)
@@ -118,8 +153,16 @@
             .attr("href", "/flight-plane-svgrepo-com.svg")
 
             // Here the airplanes size is determined at start
-            .attr("width", currentSize)
-            .attr("height", currentSize)
+            .attr("width", iconSize)
+            .attr("height", iconSize)
+
+            .each(function(d) {
+                const callSign = d.callSign ? d.callSign.toLowerCase().trim() : '';
+                if (query !== '' && callSign.includes(query)) {
+                    // Bring matched aircraft to front
+                    d3.select(this).raise();
+                }
+            })
 
             .on("click", async (event, d) => {
                 // This prevents the drag and click issue on the screen. 
@@ -237,7 +280,7 @@
     <svelte:window bind:innerWidth={width} bind:innerHeight={height} />
 
     <!-- Title -->
-     <SearchPanel on:search={(e) => console.log("Search to:", e.detail.query)} />
+     <SearchPanel on:search={(e) => searchQuery = e.detail.query} />
     <!-- <div class="Text-container">
         <h1>Flight Tracker</h1>
         <p class="Description">This flighttracker gives insight about the passengers aircrafts in real time</p>

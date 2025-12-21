@@ -31,7 +31,7 @@
     </div>
 
     <div class="search-wrapper" transition:slide={{ duration: 400, easing: quintOut, axis: 'y' }}>
-        <input type="text" placeholder="Search flights..." bind:value={searchQuery} on:input={handleSearch} />
-        <button class="search-button">Search</button>
+        <input type="text" placeholder="Search flights..." bind:value={searchQuery} on:input={handleSearch} on:keydown={(e) => e.key === 'Enter' && handleSearch()} />
+        <button class="search-button" on:click={handleSearch}>Search</button>
     </div>
 </div>
