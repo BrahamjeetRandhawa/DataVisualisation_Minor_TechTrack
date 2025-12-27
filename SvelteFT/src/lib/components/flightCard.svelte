@@ -30,17 +30,17 @@
             <button class="closeButton" on:click|stopPropagation={close}>x</button>
             <h2>Flight Information</h2>
             <div>
-                <p>
+                <p class="overlayText">
                     {selectedFlight.estDepartureAirport || '?'} - {selectedFlight.estArrivalAirport || '?'}
                 </p>
             </div>
-            <p>Call-sign: {selectedFlight.callSign || 'N/A'}</p>
+            <p class="overlayText">Call-sign: {selectedFlight.callSign || 'N/A'}</p>
             <!-- with Number and toFixed, the velocity will be displayed without a decimal. The "Number" prevents the velocity in becoming a string -->
-            <p>Speed: {Number(selectedFlight.velocity * 3.6 || 'N/A').toFixed(0)} km/h</p>
-            <p>coordinates: ({selectedFlight.longitude}, {selectedFlight.latitude})</p>
-            <p>Origin country: {selectedFlight.origin_country || "N/A"}</p>
-            <p>Vertical rate: {selectedFlight.vertical_rate || "0"} m/s</p>
-            <p>altitude: {selectedFlight.geo_altitude || "0"} m</p>
-            <p>{selectedFlight.on_ground}</p>
+            <p class="overlayText">Speed: {Number(selectedFlight.velocity * 3.6 || 'N/A').toFixed(0)} km/h</p>
+            <p class="overlayText">coordinates: ({selectedFlight.longitude}, {selectedFlight.latitude})</p>
+            <p class="overlayText">Origin country: {selectedFlight.origin_country || "N/A"}</p>
+            <p class="overlayText">Vertical rate: {selectedFlight.vertical_rate || "0"} m/s</p>
+            <p class="overlayText">altitude: {selectedFlight.geo_altitude || "0"} m</p>
+            <p class="overlayText">{selectedFlight.on_ground}</p>
         </header>
     </div>

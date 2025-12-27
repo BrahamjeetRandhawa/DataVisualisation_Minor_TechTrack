@@ -11,6 +11,7 @@
     import { updateFlightsPosition } from '$lib/components/flightUpdates'
     import { fetchData, fetchFlightDetails } from '$lib/components/APIService';
     import { flightAnimation } from '$lib/components/timerBasedAnimation';
+    import SearchPanel from '$lib/components/searchPanel.svelte';
 
     import { fade, scale, crossfade } from 'svelte/transition';
     import { cubicOut, quintOut } from 'svelte/easing'
@@ -25,6 +26,7 @@
 
     // dataHandling for the aircrafts
     let allFlights = [];
+    let searchQuery = '';
     let flightData = [];
     let svgContainer;
 
@@ -38,6 +40,8 @@
     let hasMoved = false;
     let timer;
     const speedFactor = 0.0000005;
+    let userLocation = null;
+    let isLocating = false;
 
     // For hover effect on aircrafts
     let hoveredFlight = null;
@@ -50,6 +54,65 @@
     // Aircraft sizes
     let iconSize = 25;
     let currentSize;
+
+    // Function to locate user and fly to that location
+    const flyToUserLocation = () => {
+        if (!navigator.geolocation) {
+            console.log("geolocation not supported");
+            return;
+        }
+
+        isLocating = true;
+
+        navigator.geolocation.getCurrentPosition((position) => {
+            const { latitude, longitude } = position.coords;
+
+            userLocation = { lat: latitude, long: longitude };
+            // The globe rotation animation 
+            const targetRotation = [-longitude, -latitude];
+
+            // Zoom in effect
+            const targetScale = initialScale * 15;
+
+            // Animation smoothing using d3 transition
+            d3.transition()
+            .duration(2000)
+            .ease(d3.easeCubicOut)
+            .tween("rotateAndZoom", () => {
+                // Interpolate new rotation and scale
+                const r = d3.interpolate(projection.rotate(), targetRotation);
+                const s = d3.interpolate(projection.scale(), targetScale);
+
+                return (t) => {
+                    projection.rotate(r(t));
+                    projection.scale(s(t));
+
+                    svg.selectAll("path")
+                    .attr("d", path);
+
+                    // Update flights position
+                    updateFlights();
+                };
+            })
+            // Update currentZoom at the end of the transition
+            .on("end", () => {
+                currentZoom = targetScale;
+            });
+        }, (error) => {
+            // If user denies location access or an error occurs
+            console.warn("Location access denied or error occured", error)
+        });
+    };
+
+
+    
+
+    $: if (svgContainer && projection && allFlights.length > 0) {
+        currentSize = iconSize;
+
+        const trigger = searchQuery;
+        drawFlightsOnGlobe(allFlights);
+    };
 
     // The fallback run when the elemens is not transiting as should be
     // The 'node' here is the DOM element, whcih gets manipulated. It will show a new layer onclick 
@@ -101,12 +164,81 @@
             flightData: flightData,
             hoveredFlight: hoveredFlight
         });
+
+        const query = searchQuery ? searchQuery.toLowerCase().trim() : '';
+
+
+        svg.selectAll("image.flight")
+                .attr("width", d => {
+                    const callSign = d.callSign ? d.callSign.toLowerCase().trim() : '';
+                    const isMatch = query !== '' && callSign.includes(query);
+                    return isMatch ? 50 : currentSize;
+                })
+                .attr("height", d => {
+                    const callSign = d.callSign ? d.callSign.toLowerCase().trim() : '';
+                    const isMatch = query !== '' && callSign.includes(query);
+                    return isMatch ? 50 : currentSize;
+                })
+                .each(function(d) {
+                    const callSign = d.callSign ? d.callSign.toLowerCase().trim() : '';
+                    if (query !== '' && callSign.includes(query)) {
+                        // Bring matched aircraft to front
+                        d3.select(this).raise();
+                    }
+                });
+
+        if (userLocation) {
+            const userMarker = svg.selectAll(".user-marker-group")
+            .data([userLocation]);
+
+            const enterGroup = userMarker.enter()
+            .append("g")
+            .attr("class", "user-marker-group")
+            .on("click", (e) => {
+            e.stopPropagation();
+            flyToUserLocation();
+            });
+
+            enterGroup.append("circle")
+            .attr("class", "user-pulse-ring")
+            .attr("r", 11)
+            .attr("fill", "rgba(0, 123, 255, 0.3)")
+            .attr("opacity", 0.4);
+
+            enterGroup.append("circle")
+            .attr("class", "userDot")
+            .attr("r", 6)
+            .attr("fill", "#007bff")
+            .attr("stroke", "#fff")
+            .attr("stroke-width", 2);
+
+            userMarker.merge(enterGroup)
+            .each(function(d) {
+                const coords = projection([d.long, d.lat]);
+
+                const center = projection.invert([width / 2, height / 2]);
+                const distance = d3.geoDistance(center, [d.long, d.lat], center);
+
+                // Show marker only if vissible on globe
+                if (distance < Math.PI / 2) {
+                    d3.select(this)
+                    .style("display", "block")
+                    .attr("transform", `translate(${coords[0]}, ${coords[1]})`)
+                    .raise();
+                } else {
+                    d3.select(this)
+                    .style("display", "none")
+                }
+            })
+        }
     };
 
     // ------Data cleaning for aircrafts------
     const drawFlightsOnGlobe = (flights) => {
 
         flightData = cleanFlightData(flights);
+
+        const query = searchQuery ? searchQuery.toLowerCase().trim() : '';
         
         svg.selectAll("image.flight")
         .data(flightData, d => d.id)
@@ -117,8 +249,16 @@
             .attr("href", "/flight-plane-svgrepo-com.svg")
 
             // Here the airplanes size is determined at start
-            .attr("width", currentSize)
-            .attr("height", currentSize)
+            .attr("width", iconSize)
+            .attr("height", iconSize)
+
+            .each(function(d) {
+                const callSign = d.callSign ? d.callSign.toLowerCase().trim() : '';
+                if (query !== '' && callSign.includes(query)) {
+                    // Bring matched aircraft to front
+                    d3.select(this).raise();
+                }
+            })
 
             .on("click", async (event, d) => {
                 // This prevents the drag and click issue on the screen. 
@@ -214,6 +354,11 @@
 
        allFlights = await fetchData(false);
 
+    //    Timeout is used to ensure the globe gets rendered fully before executing the user location
+       setTimeout(() => {
+        flyToUserLocation();
+       }, 500)
+
         // elke 2 minuten data verversen = 120000 ms
         // "allFlights" will be updated
         const pollingInterval = 120000;
@@ -236,9 +381,13 @@
     <svelte:window bind:innerWidth={width} bind:innerHeight={height} />
 
     <!-- Title -->
-    <h1>Flight Tracker</h1>
+     <SearchPanel on:search={(e) => searchQuery = e.detail.query} />
+    <!-- <div class="Text-container">
+        <h1>Flight Tracker</h1>
+        <p class="Description">This flighttracker gives insight about the passengers aircrafts in real time</p>
+    </div> -->
 
-	<svg id="globe" bind:this={svgContainer}></svg>
+	<svg id="globe" bind:this={svgContainer} on:mousedown={() => isLocating = false} on:touchstart={() => isLocating = false} role="application" aria-label="3D Globe"></svg>
 
     <!-- With the '{#if (data)}', the code within only happens when this is triggerd on the screen. This code snippet will only show up when hovered over the aircrafts. -->
     {#if hoveredFlight && !selectedFlight}
@@ -261,6 +410,12 @@
     send={send}
     />
     {/if}
+
+    <button class="locateButton" class:active={isLocating} on:click={flyToUserLocation} aria-label="Locate me">
+        <!-- <img src="/locate-icon.svg" alt="Locate me icon" /> -->
+        
+        <svg width="64px" height="64px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#CCCCCC" stroke-width="0.096"></g><g id="SVGRepo_iconCarrier"> <path d="M10.9792 4.26973L4.59197 18.4636C4.10239 19.5516 3.85761 20.0955 3.9608 20.4146C4.05015 20.6908 4.2714 20.9042 4.55064 20.9836C4.87315 21.0753 5.40801 20.8112 6.47772 20.283L11.2921 17.9055C11.552 17.7771 11.682 17.713 11.8181 17.6877C11.9387 17.6653 12.0624 17.6653 12.183 17.6877C12.3192 17.713 12.4491 17.7771 12.709 17.9055L17.5234 20.283C18.5931 20.8112 19.128 21.0753 19.4505 20.9836C19.7298 20.9042 19.951 20.6908 20.0403 20.4146C20.1435 20.0955 19.8988 19.5516 19.4092 18.4636L13.0219 4.26973C12.6979 3.54967 12.5359 3.18964 12.3108 3.07837C12.1153 2.98169 11.8859 2.98169 11.6903 3.07837C11.4653 3.18964 11.3032 3.54967 10.9792 4.26973Z" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
+    </button>
 
     
 

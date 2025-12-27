@@ -34,6 +34,15 @@ const drag = d3.drag()
 
         const zoom = d3.zoom()
         .scaleExtent([0.5, 30])
+
+        // Here I filter between the zoom types. In order to stop the conflict
+        .filter((event) => {
+            if (event.type === 'wheel') return true;
+
+            if (event.type && event.touches.length >= 2) return true;
+
+            return false;
+        })
         .on("zoom", event => {
             const newScale = initialScale * event.transform.k;
 
