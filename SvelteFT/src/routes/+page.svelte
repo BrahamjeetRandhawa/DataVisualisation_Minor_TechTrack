@@ -194,17 +194,20 @@
             const enterGroup = userMarker.enter()
             .append("g")
             .attr("class", "user-marker-group")
-            .on("click", (e) => e.stopPropagation());
+            .on("click", (e) => {
+            e.stopPropagation();
+            flyToUserLocation();
+            });
 
             enterGroup.append("circle")
             .attr("class", "user-pulse-ring")
-            .attr("r", 10)
+            .attr("r", 11)
             .attr("fill", "rgba(0, 123, 255, 0.3)")
-            .attr("oppacity", 0.4);
+            .attr("opacity", 0.4);
 
             enterGroup.append("circle")
             .attr("class", "userDot")
-            .attr("r", 5)
+            .attr("r", 6)
             .attr("fill", "#007bff")
             .attr("stroke", "#fff")
             .attr("stroke-width", 2);
