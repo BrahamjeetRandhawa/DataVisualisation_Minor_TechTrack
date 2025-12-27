@@ -40,6 +40,7 @@
     let hasMoved = false;
     let timer;
     const speedFactor = 0.0000005;
+    let userLocation = null;
 
     // For hover effect on aircrafts
     let hoveredFlight = null;
@@ -52,6 +53,53 @@
     // Aircraft sizes
     let iconSize = 25;
     let currentSize;
+
+    // Function to locate user and fly to that location
+    const flyToUserLocation = () => {
+        if (!navigator.geolocation) {
+            console.log("geolocation not supported");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition((position) => {
+            const { latitude, longitude } = position.coords;
+
+            userLocation = { lat: latitude, long: longitude };
+            // The globe rotation animation 
+            const targetRotation = [-longitude, -latitude];
+
+            // Zoom in effect
+            const targetScale = initialScale * 2.5;
+
+            // Animation smoothing using d3 transition
+            d3.transition()
+            .duration(2000)
+            .ease(d3.easeCubicOut)
+            .tween("rotateAndZoom", () => {
+                // Interpolate new rotation and scale
+                const r = d3.interpolate(projection.rotate(), targetRotation);
+                const s = d3.interpolate(projection.scale(), targetScale);
+
+                return (t) => {
+                    projection.rotate(r(t));
+                    projection.scale(s(t));
+
+                    svg.selectAll("path")
+                    .attr("d", path);
+
+                    // Update flights position
+                    updateFlights();
+                };
+            })
+            // Update currentZoom at the end of the transition
+            .on("end", () => {
+                currentZoom = targetScale;
+            });
+        }, (error) => {
+            // If user denies location access or an error occurs
+            console.warn("Location access denied or error occured", error)
+        });
+    };
 
 
     
@@ -134,7 +182,49 @@
                         // Bring matched aircraft to front
                         d3.select(this).raise();
                     }
-                })
+                });
+
+        if (userLocation) {
+            const userMarker = svg.selectAll(".user-marker-group")
+            .data([userLocation]);
+
+            const enterGroup = userMarker.enter()
+            .append("g")
+            .attr("class", "user-marker-group")
+            .on("click", (e) => e.stopPropagation());
+
+            enterGroup.append("circle")
+            .attr("class", "user-pulse-ring")
+            .attr("r", 10)
+            .attr("fill", "rgba(0, 123, 255, 0.3)")
+            .attr("oppacity", 0.4);
+
+            enterGroup.append("circle")
+            .attr("class", "userDot")
+            .attr("r", 5)
+            .attr("fill", "#007bff")
+            .attr("stroke", "#fff")
+            .attr("stroke-width", 2);
+
+            userMarker.merge(enterGroup)
+            .each(function(d) {
+                const coords = projection([d.long, d.lat]);
+
+                const center = projection.invert([width / 2, height / 2]);
+                const distance = d3.geoDistance(center, [d.long, d.lat], center);
+
+                // Show marker only if vissible on globe
+                if (distance < Math.PI / 2) {
+                    d3.select(this)
+                    .style("display", "block")
+                    .attr("transform", `translate(${coords[0]}, ${coords[1]})`)
+                    .raise();
+                } else {
+                    d3.select(this)
+                    .style("display", "none")
+                }
+            })
+        }
     };
 
     // ------Data cleaning for aircrafts------
@@ -257,6 +347,11 @@
        });
 
        allFlights = await fetchData(false);
+
+    //    Timeout is used to ensure the globe gets rendered fully before executing the user location
+       setTimeout(() => {
+        flyToUserLocation();
+       }, 500)
 
         // elke 2 minuten data verversen = 120000 ms
         // "allFlights" will be updated
