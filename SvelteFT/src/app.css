@@ -39,14 +39,15 @@
             color: white;
 
             overflow: hidden;
-            height: 90px;
+            max-height: 90px;
 
-            transition: height 0.3s ease-in-out;
+            transition: max-height 0.3s ease-in-out;
             
         }
 
         .panel-container.open {
-            height: 300px;
+            min-height: 300px;
+            max-height: 80vh;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
@@ -114,12 +115,17 @@
             display: flex;
             align-items: center;
             justify-content: flex-start;
+            position: relative;
             margin-left: 2%;
             border-radius: 20px;
             padding: 5px;
             width: 92%;
-            height: 2.3em;
+            flex-wrap: nowrap;
+            height: auto;
+            min-height: 2.3em;
             background-color: rgba(0, 0, 0, 30%);
+
+            transition: all 0.5s ease-in-out;
         }
 
         .search-wrapper input {
@@ -140,6 +146,30 @@
             width: 70%;
             transition: all 0.3s ease-in-out;
             outline: none;
+        }
+
+        .searchList {
+            position: relative;
+            top: 0;
+            left: 0;
+            width: 100%;
+
+            background-color: rgba(0, 0, 0, 30%);
+            border-radius: 10px;
+            list-style: none;
+            padding: 0;
+            margin-top: 5px;
+
+            max-height: 30vh;
+            overflow-y: auto;
+            z-index: 3000;
+        }
+
+        .searchList li {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+            color: white;
         }
 
         .search-button {

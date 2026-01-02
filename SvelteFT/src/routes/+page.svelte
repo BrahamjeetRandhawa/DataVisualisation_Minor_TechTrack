@@ -418,7 +418,7 @@
     <!-- Title -->
      {#if !selectedFlight}
      <div class="searchWrapper" transition:fly="{{ y: -200, duration: 200, easing: quintOut }}">
-     <SearchPanel on:search={handleFlightSearch} />
+     <SearchPanel on:search={handleFlightSearch} flightData={flightData} />
      </div>
      {/if}
     <!-- <div class="Text-container">
