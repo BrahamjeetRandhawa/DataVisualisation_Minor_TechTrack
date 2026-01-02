@@ -56,23 +56,22 @@
     let currentSize;
 
     // Function to locate user and fly to that location
-    const flyToUserLocation = () => {
+    const animateGlobeTo = (lat, long, zoomFactor = 15) => {
         if (!navigator.geolocation) {
             console.log("geolocation not supported");
             return;
         }
 
-        isLocating = true;
+        isLocating = false;
 
-        navigator.geolocation.getCurrentPosition((position) => {
-            const { latitude, longitude } = position.coords;
+        
 
-            userLocation = { lat: latitude, long: longitude };
+            
             // The globe rotation animation 
-            const targetRotation = [-longitude, -latitude];
+            const targetRotation = [-long, -lat];
 
             // Zoom in effect
-            const targetScale = initialScale * 15;
+            const targetScale = initialScale * zoomFactor;
 
             // Animation smoothing using d3 transition
             d3.transition()
@@ -98,10 +97,46 @@
             .on("end", () => {
                 currentZoom = targetScale;
             });
+        }
+        
+        const flyToUserLocation = () => {
+            if (!navigator.geolocation) return;
+
+            isLocating = true;
+
+            navigator.geolocation.getCurrentPosition((position) => {
+            const { latitude, longitude } = position.coords;
+            userLocation = { lat: latitude, long: longitude };
+
+            animateGlobeTo(latitude, longitude, 15);
+
         }, (error) => {
             // If user denies location access or an error occurs
-            console.warn("Location access denied or error occured", error)
+            console.warn("Location access denied or error occured", error);
+            isLocating = false;
         });
+    };
+
+    const handleFlightSearch = (event) => {
+        const query = event.detail.query;
+        searchQuery = query;
+
+        if (!query) return;
+
+        const foundFlight = flightData.find(d => 
+            d.callSign && d.callSign.toLowerCase().trim() === query.toLowerCase().trim()
+        );
+
+        if (foundFlight) {
+            console.log("Flying to:", foundFlight.callSign);
+
+            const lat = foundFlight.latitude || foundFlight.lat;
+            const long = foundFlight.longitude || foundFlight.long;
+
+            if (lat && long) {
+                animateGlobeTo(lat, long, 6);
+            }
+        }
     };
 
 
@@ -381,7 +416,7 @@
     <svelte:window bind:innerWidth={width} bind:innerHeight={height} />
 
     <!-- Title -->
-     <SearchPanel on:search={(e) => searchQuery = e.detail.query} />
+     <SearchPanel on:search={handleFlightSearch} />
     <!-- <div class="Text-container">
         <h1>Flight Tracker</h1>
         <p class="Description">This flighttracker gives insight about the passengers aircrafts in real time</p>
