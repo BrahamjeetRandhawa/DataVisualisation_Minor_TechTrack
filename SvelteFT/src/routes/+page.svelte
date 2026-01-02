@@ -13,7 +13,7 @@
     import { flightAnimation } from '$lib/components/timerBasedAnimation';
     import SearchPanel from '$lib/components/searchPanel.svelte';
 
-    import { fade, scale, crossfade } from 'svelte/transition';
+    import { fade, scale, crossfade, fly } from 'svelte/transition';
     import { cubicOut, quintOut } from 'svelte/easing'
 
     import { onMount } from 'svelte'
@@ -416,7 +416,11 @@
     <svelte:window bind:innerWidth={width} bind:innerHeight={height} />
 
     <!-- Title -->
+     {#if !selectedFlight}
+     <div class="searchWrapper" transition:fly="{{ y: -200, duration: 200, easing: quintOut }}">
      <SearchPanel on:search={handleFlightSearch} />
+     </div>
+     {/if}
     <!-- <div class="Text-container">
         <h1>Flight Tracker</h1>
         <p class="Description">This flighttracker gives insight about the passengers aircrafts in real time</p>
