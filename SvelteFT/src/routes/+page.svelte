@@ -56,7 +56,7 @@
     let currentSize;
 
     // Function to locate user and fly to that location
-    const animateGlobeTo = (lat, long, zoomFactor = 15) => {
+    const animateGlobeTo = (lat, long) => {
         if (!navigator.geolocation) {
             console.log("geolocation not supported");
             return;
@@ -71,7 +71,7 @@
             const targetRotation = [-long, -lat];
 
             // Zoom in effect
-            const targetScale = initialScale * zoomFactor;
+            const targetScale = initialScale * 15;
 
             // Animation smoothing using d3 transition
             d3.transition()
