@@ -425,8 +425,22 @@
         <h1>Flight Tracker</h1>
         <p class="Description">This flighttracker gives insight about the passengers aircrafts in real time</p>
     </div> -->
-
-	<svg id="globe" bind:this={svgContainer} on:mousedown={() => isLocating = false} on:touchstart={() => isLocating = false} role="application" aria-label="3D Globe"></svg>
+     
+	<svg 
+    id="globe" 
+    bind:this={svgContainer} 
+    role="button" 
+    aria-label="3D Globe" 
+    tabindex="0" 
+    on:mousedown={() => isLocating = false} 
+    on:touchstart={() => isLocating = false} 
+    on:keydown={(e) => {
+        // Trigger the same logic as the click event when the user presses Enter or spacebar
+        if (e.key === 'Enter' || e.key === ' ') { 
+            isLocating = false;
+            }
+            }}>
+        </svg>
 
     <!-- With the '{#if (data)}', the code within only happens when this is triggerd on the screen. This code snippet will only show up when hovered over the aircrafts. -->
     {#if hoveredFlight && !selectedFlight}

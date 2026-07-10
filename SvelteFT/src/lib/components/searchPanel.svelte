@@ -54,7 +54,16 @@
 
 <div class="panel-container" class:open={isOpen}>
 
-    <div class="handle-area" on:click={togglePanel} role="button" tabindex="0" aria-label={isOpen ? "Close panel" : "Open panel"}>
+    <div 
+    class="handle-area" 
+    on:click={togglePanel}
+    on:keydown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ')
+        togglePanel();
+    }} 
+    role="button" 
+    tabindex="0" 
+    aria-label={isOpen ? "Close panel" : "Open panel"}>
         <div class="handle-bar"></div>
     </div>
 
@@ -72,11 +81,20 @@
         {#if showSuggestions && filteredFlights.length > 0}
         <ul class="searchList" transition:slide={{ duration: 200}}>
             {#each filteredFlights as flight}
-                <li on:click={() => selectSuggestion(flight)}>
+                <button 
+                class="searchItem"
+                on:click={() => selectSuggestion(flight)}
+                on:keydown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') 
+                    selectSuggestion(flight);
+                }}
+                type="button"
+                tabindex="0"
+                >
                     <strong>{flight.callSign}</strong>
                     <!-- With country the flights origin can be determined -->
                     <span class="country">- {flight.origin_country}</span>
-                </li>
+                </button>
             {/each}
         </ul>
     {/if}

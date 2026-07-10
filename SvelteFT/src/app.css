@@ -165,7 +165,7 @@
             z-index: 3000;
         }
 
-        .searchList li {
+        .searchList > .searchItem {
             padding: 10px;
             border-bottom: 1px solid #ddd;
             cursor: pointer;
