@@ -1,17 +1,19 @@
 
 import * as d3 from 'd3';
 
-export const interactions = ({ svg, projection, path, initialScale, updateFlights }) => {
+export const interactions = ({ svg, projection, path, initialScale, updateFlights, onUserInteraction }) => {
 
     // I am using sensitivity here, because sensitivt is being used active here
     let sensitivity = 0.25;
 
 const drag = d3.drag()
         .on("start", (event) => {
+            if (onUserInteraction) onUserInteraction();
             event.subject.rotate = projection.rotate()
         })
 
         .on("drag", (event) => {
+            if (onUserInteraction) onUserInteraction();
             // const sensitivity = 0.25
             const currentRotate = projection.rotate()
             // const rotate = event.subject.rotate
@@ -44,6 +46,7 @@ const drag = d3.drag()
             return false;
         })
         .on("zoom", event => {
+            if (onUserInteraction) onUserInteraction();
             const newScale = initialScale * event.transform.k;
 
             projection.scale(newScale);

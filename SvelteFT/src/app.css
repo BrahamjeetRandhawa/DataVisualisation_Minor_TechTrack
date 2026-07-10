@@ -19,39 +19,7 @@
             transition: all 0.5s ease-in-out;
         } */
 
-        .panel-container {
-            position: absolute;
-            bottom: 0%;
-            left: 2%;
-            width: 25em;
-            
-            /* Change here to add glass effect */
-            /* From https://css.glass */
-            background: rgba(0, 0, 0, 0.11);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(4.5px);
-            -webkit-backdrop-filter: blur(4.5px);
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            
-            border-radius: 15px;
-            z-index: 2000;
-
-            color: white;
-
-            overflow: hidden;
-            max-height: 90px;
-
-            transition: max-height 0.3s ease-in-out;
-            
-        }
-
-        .panel-container.open {
-            min-height: 300px;
-            max-height: 80vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-        }
+        
 
         /* .Text-container {
             display: flex;
@@ -82,121 +50,7 @@
 
         }
 
-        .Description {
-            font-size: 18px;
-            margin-top: 0;
-            padding-left: 2%;
-        }
-
-        .handle-bar-area {
-            width: 100%;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: grabbing;
-        }
         
-        .handle-bar {
-            width: 15%;
-            height: 10px;
-            background-color: white;
-            border-radius: 5px;
-            margin: 10px auto;
-            cursor: grab;
-        }
-
-        .handle-bar:focus {
-            box-shadow: 2px 2px 20px rgba(255, 255, 255, 0.5);
-            cursor: grabbing;
-        }
-
-        .search-wrapper {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            position: relative;
-            margin-left: 2%;
-            border-radius: 20px;
-            padding: 5px;
-            width: 92%;
-            flex-wrap: nowrap;
-            height: auto;
-            min-height: 2.3em;
-            background-color: rgba(0, 0, 0, 30%);
-
-            transition: all 0.5s ease-in-out;
-        }
-
-        .search-wrapper input {
-            width: 100%;
-            height: 1.8em;
-            border-radius: 20px;
-            border: none;
-            padding: 5px;
-            color: white;
-            background-color: rgba(0, 0, 0, 30%);
-            transition: all 0.3s ease-in-out;
-        }
-
-        .search-wrapper input:focus {
-            box-shadow: 2px 2px 20px rgba(255, 255, 255, 0.5);
-            background-color: rgba(0, 0, 0, 90%);
-
-            width: 70%;
-            transition: all 0.3s ease-in-out;
-            outline: none;
-        }
-
-        .searchList {
-            position: relative;
-            top: 0;
-            left: 0;
-            width: 100%;
-
-            background-color: rgba(0, 0, 0, 30%);
-            border-radius: 10px;
-            list-style: none;
-            padding: 0;
-            margin-top: 5px;
-
-            max-height: 30vh;
-            overflow-y: auto;
-            z-index: 3000;
-        }
-
-        .searchList > .searchItem {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-            cursor: pointer;
-            color: white;
-        }
-
-        .search-button {
-            position: relative;
-            height: 2.3em;
-            width: 0;
-            border-radius: 20px;
-            padding: 0;
-            border: none;
-            cursor: pointer;
-
-            opacity: 0;
-            
-            transform: translateX(5px);
-        }
-
-        .search-wrapper input:focus + .search-button {
-            height: 2.3em;
-            width: 100%;
-            border-radius: 20px;
-            opacity: 1;
-            max-width: 25%;
-            background-color: rgba(0, 0, 0, 90%);
-            box-shadow: 2px 2px 20px rgba(255, 255, 255, 0.5);
-            color: white;
-            transition: all 0.3s ease-in-out;
-        }
 
 
 
@@ -259,9 +113,9 @@
             position: absolute;
             bottom: 20px;
             right: 2%;
-            width: 50px;
-            height: 50px;
-            border-radius: 25px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
 
             background: rgba(0, 0, 0, 0.11);
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
@@ -277,7 +131,14 @@
             cursor: pointer;
             z-index: 2000;
 
-            transition: all 0.3s ease-in-out;
+            transition: background 0.8s cubic-bezier(0.33, 0.72, 0, 1.18) 0.2s;
+
+            > svg {
+                transform: rotate(0deg);
+
+                
+                transition: transform 0.8s cubic-bezier(0.33, 0.72, 0, 1.18);
+            }
         }
 
         .locateButton.active {
@@ -287,6 +148,7 @@
 
         .locateButton.active svg {
             transform: rotate(45deg);
+
         }
         
 
@@ -352,14 +214,14 @@
             border: none;
         }
 
-        .searchWrapper {
+        /* .searchWrapper {
             position: absolute;
             bottom: 0%;
             left: 2%;
             transform: translateX(-50%);
             z-index: 2000;
             width: auto;
-        }
+        } */
 
 
         /* ------Responsive Design------ */
